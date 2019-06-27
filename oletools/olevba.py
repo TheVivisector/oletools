@@ -3214,11 +3214,11 @@ class VBA_Parser(object):
             # Analyse the VBA P-code to detect VBA stomping:
             # If stomping is detected, add a fake VBA module with the P-code as source comments
             # so that VBA_Scanner can find keywords and IOCs in it
-            if self.detect_vba_stomping():
-                vba_code = ''
-                for line in self.pcodedmp_output.splitlines():
-                    vba_code += "' " + line + '\n'
-                yield ('VBA P-code', 'VBA P-code', 'VBA_P-code.txt', vba_code)
+            #if self.detect_vba_stomping():
+            #    vba_code = ''
+            #    for line in self.pcodedmp_output.splitlines():
+            #        vba_code += "' " + line + '\n'
+            #    yield ('VBA P-code', 'VBA P-code', 'VBA_P-code.txt', vba_code)
 
 
     def extract_all_macros(self):
@@ -3259,13 +3259,13 @@ class VBA_Parser(object):
             # Analyze the whole code at once:
             scanner = VBA_Scanner(self.vba_code_all_modules)
             self.analysis_results = scanner.scan(show_decoded_strings, deobfuscate)
-            if self.detect_vba_stomping():
-                log.debug('adding VBA stomping to suspicious keywords')
-                keyword = 'VBA Stomping'
-                description = 'VBA Stomping was detected: the VBA source code and P-code are different, '\
-                    'this may have been used to hide malicious code'
-                scanner.suspicious_keywords.append((keyword, description))
-                scanner.results.append(('Suspicious', keyword, description))
+            #if self.detect_vba_stomping():
+            #    log.debug('adding VBA stomping to suspicious keywords')
+            #    keyword = 'VBA Stomping'
+            #    description = 'VBA Stomping was detected: the VBA source code and P-code are different, '\
+            #        'this may have been used to hide malicious code'
+            #scanner.suspicious_keywords.append((keyword, description))
+            #scanner.results.append(('Suspicious', keyword, description))
             autoexec, suspicious, iocs, hexstrings, base64strings, dridex, vbastrings = scanner.scan_summary()
             self.nb_autoexec += autoexec
             self.nb_suspicious += suspicious
