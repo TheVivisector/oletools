@@ -19,7 +19,12 @@ import sys
 from zipfile import ZipFile, BadZipfile, is_zipfile
 from os.path import splitext
 import io
-import re
+
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 from oletools.common.log_helper import log_helper
 
 # import lxml or ElementTree for XML parsing:

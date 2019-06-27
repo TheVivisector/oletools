@@ -34,7 +34,10 @@ __version__ = "0.7.2"
 import copy
 import csv
 import random
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import sys
 import textwrap
 import itertools

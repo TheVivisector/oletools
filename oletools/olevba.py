@@ -260,7 +260,11 @@ import struct
 from io import BytesIO, StringIO
 import math
 import zipfile
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import optparse
 import binascii
 import base64
@@ -3281,9 +3285,12 @@ class VBA_Parser(object):
         # based on the length of the encoded string, in reverse order:
         analysis = sorted(analysis, key=lambda type_decoded_encoded: len(type_decoded_encoded[2]), reverse=True)
         # normally now self.vba_code_all_modules contains source code from all modules
+        #WAM don't collapse helpful to leave orig for clam or other matchng 
         # Need to collapse long lines:
-        deobf_code = vba_collapse_long_lines(self.vba_code_all_modules)
-        deobf_code = filter_vba(deobf_code)
+        #deobf_code = vba_collapse_long_lines(self.vba_code_all_modules)
+        deobf_code = self.vba_code_all_modules
+        #keep attribute VB_ stuff
+        #deobf_code = filter_vba(deobf_code)
         for kw_type, decoded, encoded in analysis:
             if kw_type == 'VBA string':
                 #print '%3d occurences: %r => %r' % (deobf_code.count(encoded), encoded, decoded)

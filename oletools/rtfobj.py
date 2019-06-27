@@ -102,8 +102,12 @@ __version__ = '0.54'
 
 
 # === IMPORTS =================================================================
+try:
+    import re2 as re
+except ImportError:
+    import re
 
-import re, os, sys, binascii, logging, optparse, hashlib
+import os, sys, binascii, logging, optparse, hashlib
 import os.path
 from time import time
 

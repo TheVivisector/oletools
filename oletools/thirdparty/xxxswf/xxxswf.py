@@ -12,7 +12,11 @@ import hashlib
 import imp
 import math
 import os
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import struct
 import sys
 import time

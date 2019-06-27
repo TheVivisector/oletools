@@ -52,7 +52,10 @@ from __future__ import print_function
 import argparse
 import os
 import sys
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
 import csv
 
 import olefile

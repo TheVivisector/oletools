@@ -47,7 +47,11 @@ import logging
 import struct
 import argparse
 import os
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import sys
 import io
 from zipfile import is_zipfile

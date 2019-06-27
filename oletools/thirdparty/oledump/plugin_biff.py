@@ -29,7 +29,11 @@ Todo:
 """
 
 import struct
-import re
+try:
+    import re2 as re
+except ImportError:
+    import re
+
 import optparse
 import binascii
 import sys
