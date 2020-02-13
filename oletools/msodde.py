@@ -77,6 +77,7 @@ from oletools import xls_parser
 from oletools import rtfobj
 from oletools.ppt_record_parser import is_ppt
 from oletools import crypto
+from oletools.common.io_encoding import ensure_stdout_handles_unicode
 from oletools.common.log_helper import log_helper
 
 # -----------------------------------------------------------------------------
@@ -102,9 +103,10 @@ from oletools.common.log_helper import log_helper
 # 2018-09-11 v0.54 PL: - olefile is now a dependency
 # 2018-10-25       CH: - detect encryption and raise error if detected
 # 2019-03-25       CH: - added decryption of password-protected files
+# 2019-07-17 v0.55 CH: - fixed issue #267, unicode error on Python 2
 
 
-__version__ = '0.54.2'
+__version__ = '0.55'
 
 # -----------------------------------------------------------------------------
 # TODO: field codes can be in headers/footers/comments - parse these
@@ -238,57 +240,6 @@ DEFAULT_LOG_LEVEL = "warning"  # Default log level
 logger = log_helper.get_or_create_silent_logger('msodde')
 
 
-# === UNICODE IN PY2 =========================================================
-
-def ensure_stdout_handles_unicode():
-    """ Ensure stdout can handle unicode by wrapping it if necessary
-
-    Required e.g. if output of this script is piped or redirected in a linux
-    shell, since then sys.stdout.encoding is ascii and cannot handle
-    print(unicode). In that case we need to find some compatible encoding and
-    wrap sys.stdout into a encoder following (many thanks!)
-    https://stackoverflow.com/a/1819009 or https://stackoverflow.com/a/20447935
-
-    Can be undone by setting sys.stdout = sys.__stdout__
-    """
-    import codecs
-    import locale
-
-    # do not re-wrap
-    if isinstance(sys.stdout, codecs.StreamWriter):
-        return
-
-    # try to find encoding for sys.stdout
-    encoding = None
-    try:
-        encoding = sys.stdout.encoding
-    except AttributeError:              # variable "encoding" might not exist
-        pass
-
-    if encoding not in (None, '', 'ascii'):
-        return   # no need to wrap
-
-    # try to find an encoding that can handle unicode
-    try:
-        encoding = locale.getpreferredencoding()
-    except Exception:
-        pass
-
-    # fallback if still no encoding available
-    if encoding in (None, '', 'ascii'):
-        encoding = 'utf8'
-
-    # logging is probably not initialized yet, but just in case
-    logger.debug('wrapping sys.stdout with encoder using {0}'.format(encoding))
-
-    wrapper = codecs.getwriter(encoding)
-    sys.stdout = wrapper(sys.stdout)
-
-
-if sys.version_info.major < 3:
-    ensure_stdout_handles_unicode()   # e.g. for print(text) in main()
-
-
 # === ARGUMENT PARSING =======================================================
 
 class ArgParserWithBanner(argparse.ArgumentParser):
@@ -366,7 +317,7 @@ def process_doc_field(data):
     """ check if field instructions start with DDE
 
     expects unicode input, returns unicode output (empty if not dde) """
-    logger.debug('processing field \'{0}\''.format(data))
+    logger.debug(u'processing field \'{0}\''.format(data))
 
     if data.lstrip().lower().startswith(u'dde'):
         return data
@@ -629,7 +580,7 @@ def field_is_blacklisted(contents):
         index = FIELD_BLACKLIST_CMDS.index(words[0].lower())
     except ValueError:    # first word is no blacklisted command
         return False
-    logger.debug('trying to match "{0}" to blacklist command {1}'
+    logger.debug(u'trying to match "{0}" to blacklist command {1}'
                  .format(contents, FIELD_BLACKLIST[index]))
     _, nargs_required, nargs_optional, sw_with_arg, sw_solo, sw_format \
         = FIELD_BLACKLIST[index]
@@ -641,12 +592,12 @@ def field_is_blacklisted(contents):
             break
         nargs += 1
     if nargs < nargs_required:
-        logger.debug('too few args: found {0}, but need at least {1} in "{2}"'
+        logger.debug(u'too few args: found {0}, but need at least {1} in "{2}"'
                      .format(nargs, nargs_required, contents))
         return False
     if nargs > nargs_required + nargs_optional:
-        logger.debug('too many args: found {0}, but need at most {1}+{2} in '
-                     '"{3}"'
+        logger.debug(u'too many args: found {0}, but need at most {1}+{2} in '
+                     u'"{3}"'
                      .format(nargs, nargs_required, nargs_optional, contents))
         return False
 
@@ -656,14 +607,14 @@ def field_is_blacklisted(contents):
     for word in words[1+nargs:]:
         if expect_arg:            # this is an argument for the last switch
             if arg_choices and (word not in arg_choices):
-                logger.debug('Found invalid switch argument "{0}" in "{1}"'
+                logger.debug(u'Found invalid switch argument "{0}" in "{1}"'
                              .format(word, contents))
                 return False
             expect_arg = False
             arg_choices = []   # in general, do not enforce choices
             continue           # "no further questions, your honor"
         elif not FIELD_SWITCH_REGEX.match(word):
-            logger.debug('expected switch, found "{0}" in "{1}"'
+            logger.debug(u'expected switch, found "{0}" in "{1}"'
                          .format(word, contents))
             return False
         # we want a switch and we got a valid one
@@ -685,7 +636,7 @@ def field_is_blacklisted(contents):
             if 'numeric' in sw_format:
                 arg_choices = []  # too many choices to list them here
         else:
-            logger.debug('unexpected switch {0} in "{1}"'
+            logger.debug(u'unexpected switch {0} in "{1}"'
                          .format(switch, contents))
             return False
 
@@ -822,10 +773,16 @@ def process_csv(filepath):
     chars the same way that excel does. Tested to some extend in unittests.
 
     This can only find DDE-links, no other "suspicious" constructs (yet).
-    """
 
+    Cannot deal with unicode files yet (need more than just use uopen()).
+    """
     results = []
-    with open(filepath, 'r') as file_handle:
+    if sys.version_info.major <= 2:
+        open_arg = dict(mode='rb')
+    else:
+        open_arg = dict(newline='')
+    with open(filepath, **open_arg) as file_handle:
+        # TODO: here we should not assume this is a file on disk, filepath can be a file object
         results, dialect = process_csv_dialect(file_handle, CSV_DELIMITERS)
         is_small = file_handle.tell() < CSV_SMALL_THRESH
 
@@ -856,7 +813,6 @@ def process_csv(filepath):
 
 def process_csv_dialect(file_handle, delimiters):
     """ helper for process_csv: process with a specific csv dialect """
-
     # determine dialect = delimiter chars, quote chars, ...
     dialect = csv.Sniffer().sniff(file_handle.read(CSV_SMALL_THRESH),
                                   delimiters=delimiters)
@@ -903,7 +859,7 @@ def process_excel_xml(filepath):
                 break
         if formula is None:
             continue
-        logger.debug('found cell with formula {0}'.format(formula))
+        logger.debug(u'found cell with formula {0}'.format(formula))
         match = re.match(XML_DDE_FORMAT, formula)
         if match:
             dde_links.append(u' '.join(match.groups()[:2]))
@@ -925,6 +881,7 @@ def process_file(filepath, field_filter_mode=None):
             return process_doc(ole)
 
     with open(filepath, 'rb') as file_handle:
+        # TODO: here we should not assume this is a file on disk, filepath can be a file object
         if file_handle.read(4) == RTF_START:
             logger.debug('Process file as rtf')
             return process_rtf(file_handle, field_filter_mode)
@@ -972,6 +929,7 @@ def process_maybe_encrypted(filepath, passwords=None, crypto_nesting=0,
     :param kwargs: same as :py:func:`process_file`
     :returns: same as :py:func:`process_file`
     """
+    # TODO: here filepath may also be a file in memory, it's not necessarily on disk
     result = u''
     try:
         result = process_file(filepath, **kwargs)
