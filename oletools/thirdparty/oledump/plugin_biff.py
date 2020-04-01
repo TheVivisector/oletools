@@ -1435,13 +1435,13 @@ class cBIFF(cPluginParent):
                 # STRING record
                 if opcode == 0x207 and len(data) >= 4:
                     values = list(Strings(data[3:]).values())
-                    strings = b''
+                    strings = ''
                     if values[0] != []:
-                        strings += b' '.join(values[0])
+                        strings += ' '.join(values[0])
                     if values[1] != []:
-                        if strings != b'':
-                            strings += b' '
-                        strings += b' '.join(values[1])
+                        if strings != '':
+                            strings += ' '
+                        strings += ' '.join(values[1])
                     line += ' - %s' % strings
 
                 if options.find == '' and options.opcode == '' and not options.xlm or options.opcode != '' and options.opcode.lower() in line.lower() or options.find != '' and options.find in data or options.xlm and opcode in [0x06, 0x18, 0x85, 0x207]:
