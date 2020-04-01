@@ -3261,7 +3261,28 @@ class VBA_Parser(object):
                     log.exception('Error when running oledump.plugin_biff, please report to %s' % URL_OLEVBA_ISSUES)
         return False
 
-
+    def get_biff_all_strings(self):
+        # if this is a SLK file, the analysis was done in open_slk:
+        if self.type == TYPE_SLK:
+            return [] 
+        from oletools.thirdparty.oledump.plugin_biff import cBIFF
+        self.biff_all_strings = []
+        if self.ole_file is None:
+            return [] 
+        for excel_stream in ('Workbook', 'Book'):
+            if self.ole_file.exists(excel_stream):
+                log.debug('Found Excel stream %r' % excel_stream)
+                data = self.ole_file.openstream(excel_stream).read()
+                log.debug('Running BIFF plugin from oledump')
+                try:
+                    biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-s')
+                    self.biff_all_strings = biff_plugin.Analyze()
+                    if len(self.biff_all_string)>0:
+                        return self.biff_all_strings 
+                except:
+                    log.exception('Error when running oledump.plugin_biff, please report to %s' % URL_OLEVBA_ISSUES)
+        return []
+        
     def encode_string(self, unicode_str):
         """
         Encode a unicode string to bytes or str, using the specified encoding
