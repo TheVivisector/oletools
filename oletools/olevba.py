@@ -3253,7 +3253,7 @@ class VBA_Parser(object):
                 data = self.ole_file.openstream(excel_stream).read()
                 log.debug('Running BIFF plugin from oledump')
                 try:
-                    biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x')
+                    biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x -a')
                     self.xlm_macros = biff_plugin.Analyze()
                     if len(self.xlm_macros)>0:
                         log.debug('Found XLM macros')
