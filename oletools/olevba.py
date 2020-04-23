@@ -227,7 +227,7 @@ from __future__ import print_function
 # 2020-01-31 v0.56 KS: - added option --no-xlm, improved MHT detection
 # 2020-03-22       PL: - uses plugin_biff to display DCONN objects and their URL
 
-__version__ = '0.56dev3'
+__version__ = '0.56dev4'
 
 #------------------------------------------------------------------------------
 # TODO:
@@ -3253,7 +3253,7 @@ class VBA_Parser(object):
                 data = self.ole_file.openstream(excel_stream).read()
                 log.debug('Running BIFF plugin from oledump')
                 try:
-                    biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x -a')
+                    biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x')
                     self.xlm_macros = biff_plugin.Analyze()
                     if len(self.xlm_macros)>0:
                         log.debug('Found XLM macros')

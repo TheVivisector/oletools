@@ -12,7 +12,7 @@ http://www.decalage.info/python/oletools
 
 #=== LICENSE ==================================================================
 
-# oletools are copyright (c) 2018-2019 Philippe Lagadec (http://www.decalage.info)
+# oletools are copyright (c) 2018-2020 Philippe Lagadec (http://www.decalage.info)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -43,7 +43,7 @@ http://www.decalage.info/python/oletools
 # 2018-04-18       PL: - added known-bad CLSIDs from Cuckoo sandbox (issue #290)
 # 2018-05-08       PL: - added more CLSIDs (issues #299, #304), merged and sorted
 
-__version__ = '0.54'
+__version__ = '0.56'
 
 
 # REFERENCES:
@@ -54,11 +54,11 @@ __version__ = '0.54'
 # https://justhaifei1.blogspot.nl/2017/07/bypassing-microsofts-cve-2017-0199-patch.html
 # https://github.com/nccgroup/yaml2yara/blob/master/sample_data/office_exploits/ole.yaml
 
+# Large database of known CLSIDs/UUIDs:
+# https://uuid.pirate-server.com/
+
 
 KNOWN_CLSIDS = {
-
-
-
     '00000300-0000-0000-C000-000000000046': 'StdOleLink (embedded OLE object - Known Related to CVE-2017-0199, CVE-2017-8570, CVE-2017-8759 or CVE-2018-8174)',
     '00000303-0000-0000-C000-000000000046': 'File Moniker (may trigger CVE-2017-0199 or CVE-2017-8570)',
     '00000304-0000-0000-C000-000000000046': 'Item Moniker',
@@ -157,6 +157,7 @@ KNOWN_CLSIDS = {
     '996BF5E0-8044-4650-ADEB-0B013914E99C': 'MSCOMCTL.ListViewCtrl (may trigger CVE-2012-0158)',
     'A08A033D-1A75-4AB6-A166-EAD02F547959': 'otkloadr WRAssembly Object (can be used to bypass ASLR after triggering an exploit)',
     'B54F3741-5B07-11CF-A4B0-00AA004A55E8': 'vbscript.dll - VB Script Language (ProgID: VBS, VBScript)',
+    'B801CA65-A1FC-11D0-85AD-444553540000': 'Adobe Acrobat Document - PDF file',
     'BDD1F04B-858B-11D1-B16A-00C0F0283628': 'MSCOMCTL.ListViewCtrl (may trigger CVE-2012-0158)',
     'C08AFD90-F2A1-11D1-8455-00A0C91F3880': 'ShellBrowserWindow',
     'C62A69F0-16DC-11CE-9E98-00AA00574A4F': 'Forms.Form',
