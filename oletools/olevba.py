@@ -3526,7 +3526,6 @@ class VBA_Parser(object):
             log.warning('Returned info is not complete for PPT types!')
         else:
             ole_files = [self.ole_file, ]
-
         # start with an empty list:
         self.vba_forms = []
 
@@ -3573,9 +3572,11 @@ class VBA_Parser(object):
             ole = self.ole_file
             for form_storage in self.vba_forms:
                 o_stream = form_storage + ['o']
+                f_stream = form_storage + ['f']
                 log.debug('Opening form object stream %r' % '/'.join(o_stream))
-                form_data = ole.openstream(o_stream).read()
                 # Extract printable strings from the form object stream "o":
+                form_data = ole.openstream(o_stream).read()
+                form_data2 = ole.openstream(f_stream).read()
                 for m in re_printable_string.finditer(form_data):
                     log.debug('Printable string found in form: %r' % m.group())
                     # On Python 3, convert bytes string to unicode str:
@@ -3586,6 +3587,16 @@ class VBA_Parser(object):
                     if found_str != 'Tahoma':
                         yield (self.filename, '/'.join(o_stream), found_str)
 
+                for m in re_printable_string.finditer(form_data2):
+                    log.debug('Printable string found in form: %r' % m.group())
+                    # On Python 3, convert bytes string to unicode str:
+                    if PYTHON2:
+                        found_str = m.group()
+                    else:
+                        found_str = m.group().decode('utf8', errors='replace')
+                    if found_str != 'Tahoma':
+                        yield (self.filename, '/'.join(f_stream), found_str)
+                
     def extract_form_strings_extended(self):
         if self.ole_file is None:
             # This may be either an OpenXML/PPT or a text file:

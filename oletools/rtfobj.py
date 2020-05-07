@@ -920,14 +920,14 @@ def process_file(container, filename, data, output_dir=None, save_object=False):
                 ole_color = 'red'
                 ole_column += '\nPossibly an exploit for the OLE2Link vulnerability (VU#921560, CVE-2017-0199)\n'
                 # https://bitbucket.org/snippets/Alexander_Hanel/7Adpp
-                found_list =  re.findall(r'[a-fA-F0-9\x0D\x0A]{128,}',data)
+                found_list =  re.findall(b'[a-fA-F0-9\x0D\x0A]{128,}',data)
                 urls = []
                 for item in found_list:
                     try:
                         temp = item.replace("\x0D\x0A","").decode("hex")
                     except:
                         continue
-                    pat = re.compile(r'(?:[\x20-\x7E][\x00]){3,}')
+                    pat = re.compile(b'(?:[\x20-\x7E][\x00]){3,}')
                     words = [w.decode('utf-16le') for w in pat.findall(temp)]
                     for w in words:
                         if "http" in w:
