@@ -3263,10 +3263,10 @@ class VBA_Parser(object):
                     if "Excel 4.0 macro sheet" in '\n'.join(self.xlm_macros):
                         log.debug('Found XLM macros')
                         # get the list of labels, which may contain the "Auto_Open" trigger
-                        biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-o LABEL -r LN')
+                        biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x -o LABEL -r LN')
                         self.xlm_macros += biff_plugin.Analyze()
-                        biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-c -r LN')
-                        self.xlm_macros += biff_plugin.Analyze()
+                        #biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-x -c -r LN')
+                        #self.xlm_macros += biff_plugin.Analyze()
                         # we run plugin_biff again, this time to search DCONN objects and get their URLs, if any:
                         # ref: https://inquest.net/blog/2020/03/18/Getting-Sneakier-Hidden-Sheets-Data-Connections-and-XLM-Macros
                         biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-o DCONN -s')
