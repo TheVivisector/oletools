@@ -178,7 +178,7 @@ def get_type(filename):
     parser = XmlParser(filename)
     if parser.is_single_xml():
         match = None
-        with uopen(filename, 'r') as handle:
+        with uopen(filename, 'rb') as handle:
             match = re.search(OFFICE_XML_PROGID_REGEX, handle.read(1024))
         if not match:
             return DOCTYPE_NONE
@@ -228,6 +228,8 @@ def is_ooxml(filename):
     except BadOOXML:
         return False
     except IOError:   # one of the required files is not present
+        return False
+    except Exception as e:
         return False
     if doctype == DOCTYPE_NONE:
         return False
@@ -467,7 +469,7 @@ class XmlParser(object):
 
         # find prog id in xml prolog
         match = None
-        with uopen(self.filename, 'r') as handle:
+        with uopen(self.filename, 'rb') as handle:
             match = re.search(OFFICE_XML_PROGID_REGEX, handle.read(1024))
         if match:
             self._is_single_xml = True
