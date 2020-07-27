@@ -1728,7 +1728,7 @@ class VBA_Project(object):
         # PROJECTDOCSTRING Record
         # Specifies the description for the VBA project.
         projectdocstring_id = struct.unpack("<H", dir_stream.read(2))[0]
-        self.check_value('PROJECTDOCSTRING_Id', 0x0005, projectdocstring_id)
+        #self.check_value('PROJECTDOCSTRING_Id', 0x0005, projectdocstring_id)
         projectdocstring_sizeof_docstring = struct.unpack("<L", dir_stream.read(4))[0]
         if projectdocstring_sizeof_docstring > 2000:
             log.error(
