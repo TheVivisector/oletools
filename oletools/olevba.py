@@ -1348,7 +1348,8 @@ def decompress_stream(compressed_container):
         # chunk signature = 3 next bits - should always be 0b011
         chunk_signature = (compressed_chunk_header >> 12) & 0x07
         if chunk_signature != 0b011:
-            raise ValueError('Invalid CompressedChunkSignature in VBA compressed stream')
+            pass
+        #    raise ValueError('Invalid CompressedChunkSignature in VBA compressed stream')
         # chunk flag = next bit - 1 == compressed, 0 == uncompressed
         chunk_flag = (compressed_chunk_header >> 15) & 0x01
         log.debug("chunk size = {0}, compressed flag = {1}".format(chunk_size, chunk_flag))
