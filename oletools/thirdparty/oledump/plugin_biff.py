@@ -79,7 +79,10 @@ def P23Decode(value):
         try:
             return value.decode('utf-8')
         except UnicodeDecodeError as u:
-            return value.decode('windows-1252')
+            try:
+                return value.decode('windows-1252')
+            except:
+                return repr(value)
     else:
         return value
 
