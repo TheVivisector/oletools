@@ -1190,6 +1190,7 @@ def ParseExpression(expression, definesNames, sheetNames, cellrefformat):
             elif ptgid == 0x17: # ptgStr https://docs.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/87c2a057-705c-4473-a168-6d5fac4a9eba
                 length = P23Ord(expression[0])
                 expression = expression[1:]
+                stringValue = ""
                 if P23Ord(expression[0]) == 0: # probably BIFF8 -> UNICODE (compressed)
                     expression = expression[1:]
                     stringValue = P23Decode(expression[:length])
@@ -1201,7 +1202,8 @@ def ParseExpression(expression, definesNames, sheetNames, cellrefformat):
                     stringValue = P23Decode(expression[:length*2])
                     result += '"%s" ' % stringValue
                     expression = expression[length*2:]
-                stack.append('"' + stringValue + '"')
+                if stringValue:
+                    stack.append('"' + stringValue + '"')
             elif ptgid == 0x19:
                 grbit = P23Ord(expression[0])
                 expression = expression[1:]
