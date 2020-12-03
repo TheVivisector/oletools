@@ -3367,6 +3367,19 @@ class VBA_Parser(object):
                         biff_plugin = cBIFF(name=[excel_stream], stream=data, options='-o DCONN -s')
                         self.xlm_macros += biff_plugin.Analyze()
                         return True
+                    else: 
+                        file_pass = cBIFF(name=[excel_stream], stream=data, options='-o FORMULA')
+                        file_pass_data = file_pass.Analyze()
+                        found_old_xor = False
+                        found_formulas = False
+                        for fpass in file_pass_data:
+                            if 'FILEPASS : File Is Password-Protected - XOR obfuscation < BIFF8' in fpass:
+                                found_old_xor = True
+                            if 'FORMULA : Cell Formula - ' in fpass:
+                                found_formulas = True
+                        if found_old_xor and found_formulas:
+                            self.xlm_macros = file_pass_data
+                            return True
                 except:
                     log.exception('Error when running oledump.plugin_biff, please report to %s' % URL_OLEVBA_ISSUES)
         return False

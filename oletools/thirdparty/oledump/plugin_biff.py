@@ -2,8 +2,8 @@
 
 __description__ = 'BIFF plugin for oledump.py'
 __author__ = 'Didier Stevens'
-__version__ = '0.0.17'
-__date__ = '2020/07/17'
+__version__ = '0.0.19'
+__date__ = '2020/12/03'
 
 # Slightly modified version by Philippe Lagadec to be imported into olevba
 
@@ -44,7 +44,8 @@ History:
   2020/05/22: 0.0.15 Python 3 fix STRING record 0x207
   2020/05/26: 0.0.16 added logic for reserved bits in BOUNDSHEET
   2020/07/17: 0.0.17 added option --statistics
-
+  2020/10/03: 0.0.18 improved FILEPASS record handling
+  2020/12/03: 0.0.19 added detection of BIFF5/BIFF7 and FILEPASS record parsing
 
 Todo:
 """
@@ -1632,6 +1633,7 @@ class cBIFF(cPluginParent):
             position = 0
             macros4Found = False
             filepassFound = False
+            isBIFF8 = True
             dSheetNames = {}
             sheetNames = []
             definesNames = []
@@ -1653,7 +1655,6 @@ class cBIFF(cPluginParent):
                 else:
                     opcodename = ''
                 line = '%04x %6d %s' % (opcode, length, opcodename)
-
                 csvrow = None
 
                 # FORMULA record
@@ -1664,7 +1665,10 @@ class cBIFF(cPluginParent):
                     length = struct.unpack(formatcodes, data[20:20 + formatsize])[0]
                     expression = data[22:]
                     parsedExpression, stack = ParseExpression(expression, definesNames, sheetNames, options.cellrefformat)
-                    line += ' - %s len=%d %s' % (cellref, length, parsedExpression)
+                    if filepassFound:
+                        line += ' - %s len=%d %s' % (cellref, length, "<ENCRYPTED>")
+                    else:
+                        line += ' - %s len=%d %s' % (cellref, length, parsedExpression)
                     if len(stack) == 1:
                         csvrow = [currentSheetname, cellref, stack[0], '']
                     else:
@@ -1672,37 +1676,51 @@ class cBIFF(cPluginParent):
                     if options.formulabytes:
                         data_hex = P23Decode(binascii.b2a_hex(data))
                         spaced_data_hex = ' '.join(a+b for a,b in zip(data_hex[::2], data_hex[1::2]))
-                        line += '\nFORMULA BYTES: %s' % spaced_data_hex
-
+                        if not filepassFound:
+                            line += '\nFORMULA BYTES: %s' % spaced_data_hex
                 # LABEL record #a# difference BIFF4 and BIFF5+
                 if opcode == 0x18 and len(data) >= 16:
-                    flags = P23Ord(data[0])
-                    lnName = P23Ord(data[3])
-                    szFormula = P23Ord(data[4]) + P23Ord(data[5]) * 0x100
-                    offset = 14
-                    if P23Ord(data[offset]) == 0:  #a# hack with BIFF8 Unicode
-                        offset = 15
-                    if flags & 0x20:
-                        dBuildInNames = {1: 'Auto_Open', 2: 'Auto_Close'}
-                        code = P23Ord(data[offset])
-                        name = dBuildInNames.get(code, '?')
-                        line += ' - built-in-name %d %s' % (code, name)
-                    else:
-                        name = P23Decode(data[offset:offset+lnName])
-                        line += ' - %s' % (name)
-                    definesNames.append(name)
-                    if flags & 0x01:
-                        line += ' hidden'
-                    try:
-                        parsedExpression, stack = ParseExpression(data[offset+lnName:offset+lnName+szFormula], definesNames, sheetNames, options.cellrefformat)
-                    except IndexError:
-                        parsedExpression = '*PARSING ERROR*'
-                    line += ' len=%d %s' % (szFormula, parsedExpression)
+                    if not filepassFound:
+                        flags = P23Ord(data[0])
+                        lnName = P23Ord(data[3])
+                        szFormula = P23Ord(data[4]) + P23Ord(data[5]) * 0x100
+                        offset = 14
+                        if P23Ord(data[offset]) == 0:  #a# hack with BIFF8 Unicode
+                            offset = 15
+                        if flags & 0x20:
+                            dBuildInNames = {1: 'Auto_Open', 2: 'Auto_Close'}
+                            code = P23Ord(data[offset])
+                            name = dBuildInNames.get(code, '?')
+                            line += ' - built-in-name %d %s' % (code, name)
+                        else:
+                            name = P23Decode(data[offset:offset+lnName])
+                            line += ' - %s' % (name)
+                        definesNames.append(name)
+                        if flags & 0x01:
+                            line += ' hidden'
+                        try:
+                            parsedExpression, stack = ParseExpression(data[offset+lnName:offset+lnName+szFormula], definesNames, sheetNames, options.cellrefformat)
+                        except IndexError:
+                            parsedExpression = '*PARSING ERROR*'
+                        line += ' len=%d %s' % (szFormula, parsedExpression)
 
                 # FILEPASS record
                 if opcode == 0x2f:
                     filepassFound = True
-
+                    if len(data) == 4:
+                        line += ' - XOR obfuscation < BIFF8'
+                        result.append(line)
+                    elif len(data) >= 6:
+                        formatcodes = '<HHH'
+                        formatsize = struct.calcsize(formatcodes)
+                        encryptionMethod, encryptionKey, hashValue = struct.unpack(formatcodes, data[0:formatsize])
+                        if encryptionMethod == 0:
+                            line += ' - XOR obfuscation BIFF8'
+                        elif encryptionMethod == 1:
+                            line += ' - RC4'
+                        else:
+                            line += ' - unknown encryption method 0x%04x' % encryptionMethod
+                        result.append(line)
                 # BOUNDSHEET record
                 if opcode == 0x85 and len(data) >= 6:
                     formatcodes = '<IBB'
@@ -1724,49 +1742,55 @@ class cBIFF(cPluginParent):
                     line += ' - %s, %s - %s' % (dSheetType.get(sheetType, '%02x' % sheetType), visibility, sheetName)
 
                 # BOF record
-                if opcode == 0x0809 and len(data) >= 4:
-                    formatcodes = 'H'
+                if opcode == 0x0809 and len(data) >= 8:
+                    formatcodes = '<HHHH'
                     formatsize = struct.calcsize(formatcodes)
-                    dt = struct.unpack(formatcodes, data[2:2 + formatsize])[0]
-                    dStreamType = {5: 'workbook', 0x10: 'dialog sheet/worksheet', 0x20: 'chart sheet', 0x40: 'macro sheet'}
-                    line += ' - %s' % (dStreamType.get(dt, '0x%04x' % dt))
+                    vers, dt, rupBuild, rupYear = struct.unpack(formatcodes, data[0:formatsize])
+                    dBIFFVersion = {0x0500: 'BIFF5/BIFF7', 0x0600: 'BIFF8'}
+                    isBIFF8 = dBIFFVersion == 0x0600
+                    dStreamType = {5: 'workbook', 6: 'Visual Basic Module', 0x10: 'dialog sheet/worksheet', 0x20: 'chart sheet', 0x40: 'Excel 4.0 macro sheet', 0x100: 'Workspace file'}
+                    line += ' - %s %s 0x%04x %d' % (dBIFFVersion.get(vers, '0x%04x' % vers), dStreamType.get(dt, '0x%04x' % dt), rupBuild, rupYear)
                     if positionBIFFRecord in dSheetNames:
                         line += ' - %s' % (dSheetNames[positionBIFFRecord])
                         currentSheetname = dSheetNames[positionBIFFRecord]
 
+
                 # STRING record
                 if opcode == 0x207 and len(data) >= 4:
-                    values = list(Strings(data[3:]).values())
-                    strings = ''
-                    if values[0] != []:
-                        #strings += ' '.join(values[0])
-                        strings = values[0][0].encode()
-                    if values[1] != []:
-                        if strings != '':
-                            strings += ' '
-                        strings += ' '.join(values[1])
-                    line += ' - %s' % strings
+                    if not filepassFound:
+                        values = list(Strings(data[3:]).values())
+                        strings = ''
+                        if values[0] != []:
+                            #strings += ' '.join(values[0])
+                            strings = values[0][0].encode()
+                        if values[1] != []:
+                            if strings != '':
+                                strings += ' '
+                            strings += ' '.join(values[1])
+                        line += ' - %s' % strings
 
                 # number record
                 if opcode == 0x0203:
-                    cellref, data2 = ParseLoc(data, options.cellrefformat, True)
-                    formatcodes = '<Hd'
-                    formatsize = struct.calcsize(formatcodes)
-                    xf, value = struct.unpack(formatcodes, data2[:formatsize])
-                    line += ' - %s %.20f' % (cellref, value)
-                    csvrow = [currentSheetname, cellref, '', '%.20f' % value]
+                    if not filepassFound:
+                        cellref, data2 = ParseLoc(data, options.cellrefformat, True)
+                        formatcodes = '<Hd'
+                        formatsize = struct.calcsize(formatcodes)
+                        xf, value = struct.unpack(formatcodes, data2[:formatsize])
+                        line += ' - %s %.20f' % (cellref, value)
+                        csvrow = [currentSheetname, cellref, '', '%.20f' % value]
 
                 # RK record
                 if opcode == 0x027E and len(data) == 10:
-                    cellref, data2 = ParseLoc(data, options.cellrefformat, True)
-                    formatcodes = '<H'
-                    formatsize = struct.calcsize(formatcodes)
-                    xf = struct.unpack(formatcodes, data2[:formatsize])
-                    value = DecodeRKValue(data2[formatsize:])
-                    line += ' - %s %f' % (cellref, value)
-                    csvrow = [currentSheetname, cellref, '', '%.20f' % value]
-
-                if options.find == '' and options.opcode == '' and not options.xlm or options.opcode != '' and options.opcode.lower() in line.lower() or options.find != '' and options.find in data or options.xlm and opcode in [0x06, 0x18, 0x85, 0x207]:
+                    if not filepassFound:
+                        cellref, data2 = ParseLoc(data, options.cellrefformat, True)
+                        formatcodes = '<H'
+                        formatsize = struct.calcsize(formatcodes)
+                        xf = struct.unpack(formatcodes, data2[:formatsize])
+                        value = DecodeRKValue(data2[formatsize:])
+                        line += ' - %s %f' % (cellref, value)
+                        csvrow = [currentSheetname, cellref, '', '%.20f' % value]
+                if options.find == '' and options.opcode == '' and not options.xlm or options.opcode != '' and options.opcode.lower() in line.lower() or options.find != '' and options.find.encode() in data or options.xlm and opcode in [0x06, 0x18, 0x85, 0x207]:
+                #if options.find == '' and options.opcode == '' and not options.xlm or options.opcode != '' and options.opcode.lower() in line.lower() or options.find != '' and options.find in data or options.xlm and opcode in [0x06, 0x18, 0x85, 0x207]:
                     if not options.hex and not options.dump:
                         if options.csv or options.json:
                             if csvrow != None:
@@ -1788,7 +1812,7 @@ class cBIFF(cPluginParent):
                         result = data
 
             if options.xlm and filepassFound:
-                result = ['FILEPASS record: file is password protected']
+                result = ['Warning: FILEPASS record found, file is password protected']
             elif options.statistics:
                 stats = []
                 for opcode in sorted(dOpcodeStatistics.keys()):
@@ -1808,6 +1832,8 @@ class cBIFF(cPluginParent):
                 result = [MakeCSVLine(row, DEFAULT_SEPARATOR, QUOTE) for row in [['Sheet', 'Reference', 'Formula', 'Value']] + result]
             elif options.json:
                 result = json.dumps(result)
+            elif filepassFound:
+                result.append('Warning: FILEPASS record found, file is password protected')
 
         return result
 
