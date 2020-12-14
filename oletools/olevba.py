@@ -3862,84 +3862,88 @@ class VBA_Parser(object):
         :return: True if VBA stomping detected, False otherwise
         :rtype: bool
         """
-        log.debug('detect_vba_stomping')
-        # only run it once:
-        if self.vba_stomping_detected is not None:
-            return self.vba_stomping_detected
-        # Text and SLK files cannot be stomped:
-        if self.type in (TYPE_SLK, TYPE_TEXT):
-            self.vba_stomping_detected = False
-            return False
-        # TODO: Files in memory cannot be analysed with pcodedmp yet
-        if not self.file_on_disk:
-            log.warning('For now, VBA stomping cannot be detected for files in memory')
-            self.vba_stomping_detected = False
-            return False
-        # only run it once:
-        if self.vba_stomping_detected is None:
-            log.debug('Analysing the P-code to detect VBA stomping')
-            self.extract_pcode()
-            # print('pcodedmp OK')
-            log.debug('pcodedmp OK')
-            # process the output to extract keywords, to detect VBA stomping
-            keywords = set()
-            for line in self.pcodedmp_output.splitlines():
-                if line.startswith('\t'):
-                    log.debug('P-code: ' + line.strip())
-                    tokens = line.split(None, 1)
-                    mnemonic = tokens[0]
-                    args = ''
-                    if len(tokens) == 2:
-                        args = tokens[1].strip()
-                    # log.debug(repr([mnemonic, args]))
-                    # if mnemonic in ('VarDefn',):
-                    #     # just add the rest of the line
-                    #     keywords.add(args)
-                    # if mnemonic == 'FuncDefn':
-                    #     # function definition: just strip parentheses
-                    #     funcdefn = args.strip('()')
-                    #     keywords.add(funcdefn)
-                    if mnemonic in ('ArgsCall', 'ArgsLd', 'St', 'Ld', 'MemSt', 'Label'):
-                        # sometimes ArgsCall is followed by "(Call)", if so we remove it (issue #489)
-                        if args.startswith('(Call) '):
-                            args = args[7:]
-                        # add 1st argument:
-                        name = args.split(None, 1)[0]
-                        # sometimes pcodedmp reports names like "id_FFFF", which are not
-                        # directly present in the VBA source code
-                        # (for example "Me" in VBA appears as id_FFFF in P-code)
-                        if not name.startswith('id_'):
-                            keywords.add(name)
-                    if mnemonic == 'LitStr':
-                        # re_string = re.compile(r'\"([^\"]|\"\")*\"')
-                        # for match in re_string.finditer(line):
-                        #     print('\t' + match.group())
-                        # the string is the 2nd argument:
-                        s = args.split(None, 1)[1]
-                        # tricky issue: when a string contains double quotes inside,
-                        # pcodedmp returns a single ", whereas in the VBA source code
-                        # it is always a double "".
-                        # We have to remove the " around the strings, then double the remaining ",
-                        # and put back the " around:
-                        if len(s)>=2:
-                            assert(s[0]=='"' and s[-1]=='"')
-                            s = s[1:-1]
-                            s = s.replace('"', '""')
-                            s = '"' + s + '"'
-                        keywords.add(s)
-            log.debug('Keywords extracted from P-code: ' + repr(sorted(keywords)))
-            self.vba_stomping_detected = False
-            # get all VBA code as one string
-            vba_code_all_modules = self.get_vba_code_all_modules()
-            for keyword in keywords:
-                if keyword not in vba_code_all_modules:
-                    log.debug('Keyword {!r} not found in VBA code'.format(keyword))
-                    log.debug('VBA STOMPING DETECTED!')
-                    self.vba_stomping_detected = True
-                    break
-            if not self.vba_stomping_detected:
-                log.debug('No VBA stomping detected.')
+        try:
+            log.debug('detect_vba_stomping')
+            # only run it once:
+            if self.vba_stomping_detected is not None:
+                return self.vba_stomping_detected
+            # Text and SLK files cannot be stomped:
+            if self.type in (TYPE_SLK, TYPE_TEXT):
+                self.vba_stomping_detected = False
+                return False
+            # TODO: Files in memory cannot be analysed with pcodedmp yet
+            if not self.file_on_disk:
+                log.warning('For now, VBA stomping cannot be detected for files in memory')
+                self.vba_stomping_detected = False
+                return False
+            # only run it once:
+            if self.vba_stomping_detected is None:
+                log.debug('Analysing the P-code to detect VBA stomping')
+                self.extract_pcode()
+                # print('pcodedmp OK')
+                log.debug('pcodedmp OK')
+                # process the output to extract keywords, to detect VBA stomping
+                keywords = set()
+                for line in self.pcodedmp_output.splitlines():
+                    if line.startswith('\t'):
+                        log.debug('P-code: ' + line.strip())
+                        tokens = line.split(None, 1)
+                        mnemonic = tokens[0]
+                        args = ''
+                        if len(tokens) == 2:
+                            args = tokens[1].strip()
+                        # log.debug(repr([mnemonic, args]))
+                        # if mnemonic in ('VarDefn',):
+                        #     # just add the rest of the line
+                        #     keywords.add(args)
+                        # if mnemonic == 'FuncDefn':
+                        #     # function definition: just strip parentheses
+                        #     funcdefn = args.strip('()')
+                        #     keywords.add(funcdefn)
+                        if mnemonic in ('ArgsCall', 'ArgsLd', 'St', 'Ld', 'MemSt', 'Label'):
+                            # sometimes ArgsCall is followed by "(Call)", if so we remove it (issue #489)
+                            if args.startswith('(Call) '):
+                                args = args[7:]
+                            # add 1st argument:
+                            name = args.split(None, 1)[0]
+                            # sometimes pcodedmp reports names like "id_FFFF", which are not
+                            # directly present in the VBA source code
+                            # (for example "Me" in VBA appears as id_FFFF in P-code)
+                            if not name.startswith('id_'):
+                                keywords.add(name)
+                        if mnemonic == 'LitStr':
+                            # re_string = re.compile(r'\"([^\"]|\"\")*\"')
+                            # for match in re_string.finditer(line):
+                            #     print('\t' + match.group())
+                            # the string is the 2nd argument:
+                            s = args.split(None, 1)[1]
+                            # tricky issue: when a string contains double quotes inside,
+                            # pcodedmp returns a single ", whereas in the VBA source code
+                            # it is always a double "".
+                            # We have to remove the " around the strings, then double the remaining ",
+                            # and put back the " around:
+                            if len(s)>=2:
+                                assert(s[0]=='"' and s[-1]=='"')
+                                s = s[1:-1]
+                                s = s.replace('"', '""')
+                                s = '"' + s + '"'
+                            keywords.add(s)
+                log.debug('Keywords extracted from P-code: ' + repr(sorted(keywords)))
+                self.vba_stomping_detected = False
+                # get all VBA code as one string
+                vba_code_all_modules = self.get_vba_code_all_modules()
+                for keyword in keywords:
+                    if keyword not in vba_code_all_modules:
+                        log.debug('Keyword {!r} not found in VBA code'.format(keyword))
+                        log.debug('VBA STOMPING DETECTED!')
+                        self.vba_stomping_detected = True
+                        break
+                if not self.vba_stomping_detected:
+                    log.debug('No VBA stomping detected.')                
+        except Exception as e:
+            log.debug('Error Running VBA Stomp Detection')
         return self.vba_stomping_detected
+
 
     def close(self):
         """
