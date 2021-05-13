@@ -29,6 +29,50 @@ Software.
 News
 ----
 
+-  **2021-05-07 v0.56.2**:
+
+   -  olevba:
+
+      -  updated plugin_biff to v0.0.22 to fix a bug (issues #647, #674)
+
+   -  olevba, mraptor:
+
+      -  added detection of Workbook_BeforeClose (issue #518)
+
+   -  rtfobj:
+
+      -  fixed bug when OLE package class name ends with null characters
+         (issue #507, PR #648)
+
+   -  oleid:
+
+      -  fixed bug in check_excel (issue #584, PR #585)
+
+   -  clsid:
+
+      -  added several CLSIDs related to MS Office click-to-run issue
+         CVE-2021-27058
+      -  added checks to ensure that all CLSIDs are uppercase (PR #678)
+
+-  **2021-04-02 v0.56.1**:
+
+   -  olevba:
+
+      -  fixed bug when parsing some malformed files (issue #629)
+
+   -  oleobj:
+
+      -  fixed bug preventing detection of links 'externalReference',
+         'frame', 'hyperlink' (issue #641, PR #670)
+
+   -  setup:
+
+      -  avoid installing msoffcrypto-tool when platform is PyPy+Windows
+         (issue #473)
+      -  PyPI version is now a wheel package to improve installation and
+         avoid antivirus false positives due to test files (issues #215,
+         #398)
+
 -  **2020-09-28 v0.56**:
 
    -  olevba/mraptor:
@@ -156,13 +200,15 @@ BOSS <https://github.com/lmco/laikaboss>`__,
 `malshare.io <https://malshare.io>`__,
 `malware-repo <https://github.com/Tigzy/malware-repo>`__, `Malware
 Repository Framework (MRF) <https://www.adlice.com/download/mrf/>`__,
+`MalwareBazaar <https://bazaar.abuse.ch/>`__,
 `olefy <https://github.com/HeinleinSupport/olefy>`__,
 `PeekabooAV <https://github.com/scVENUS/PeekabooAV>`__,
 `pcodedmp <https://github.com/bontchev/pcodedmp>`__,
 `PyCIRCLean <https://github.com/CIRCL/PyCIRCLean>`__,
 `REMnux <https://remnux.org/>`__,
 `Snake <https://github.com/countercept/snake>`__,
-`SNDBOX <https://app.sndbox.com>`__,
+`SNDBOX <https://app.sndbox.com>`__, `Splunk add-on for MS O365
+Email <https://splunkbase.splunk.com/app/5365/>`__,
 `SpuriousEmu <https://github.com/ldbo/SpuriousEmu>`__,
 `Strelka <https://github.com/target/strelka>`__,
 `stoQ <https://stoq.punchcyber.com/>`__,
@@ -233,7 +279,7 @@ This license applies to the python-oletools package, apart from the
 thirdparty folder which contains third-party files published with their
 own license.
 
-The python-oletools package is copyright (c) 2012-2020 Philippe Lagadec
+The python-oletools package is copyright (c) 2012-2021 Philippe Lagadec
 (http://www.decalage.info)
 
 All rights reserved.

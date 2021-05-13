@@ -101,7 +101,11 @@ import struct
 import os
 from os.path import splitext, isfile
 from tempfile import mkstemp
-import zipfile
+try:
+    from oletools.thirdparty.xxxzip import zipfile
+except ImportError:
+    import zipfile
+
 import logging
 
 from olefile import OleFileIO

@@ -52,7 +52,7 @@ import os, fnmatch
 #--- METADATA -----------------------------------------------------------------
 
 name         = "oletools"
-version      = '0.56.1.dev2'
+version      = '0.56.2'
 desc         = "Python tools to analyze security characteristics of MS Office and OLE files (also called Structured Storage, Compound File Binary Format or Compound Document File Format), for Malware Analysis and Incident Response #DFIR"
 long_desc    = open('oletools/README.rst').read()
 author       = "Philippe Lagadec"
@@ -96,6 +96,7 @@ packages=[
     'oletools.thirdparty.xglob',
     'oletools.thirdparty.tablestream',
     'oletools.thirdparty.oledump',
+    'oletools.thirdparty.xxxzip',
 ]
 ##setupdir = '.'
 ##package_dir={'': setupdir}
@@ -321,7 +322,9 @@ def main():
             "olefile>=0.46",
             "easygui",
             'colorclass',
-            'msoffcrypto-tool',
+            # msoffcrypto-tool is not installable on PyPy+Windows (see issue #473),
+            # so we only require it if the platform is not Windows or not PyPy:
+            'msoffcrypto-tool; platform_python_implementation!="PyPy" or (python_version>="3" and platform_system!="Windows" and platform_system!="Darwin")',
             'pcodedmp>=1.2.5',
         ],
     )

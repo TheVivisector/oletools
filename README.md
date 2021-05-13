@@ -26,6 +26,28 @@ Note: python-oletools is not related to OLETools published by BeCubed Software.
 News
 ----
 
+- **2021-05-07 v0.56.2**:
+    - olevba:
+        - updated plugin_biff to v0.0.22 to fix a bug (issues #647, #674)
+    - olevba, mraptor:
+        - added detection of Workbook_BeforeClose (issue #518)
+    - rtfobj:
+        - fixed bug when OLE package class name ends with null characters (issue #507, PR #648)
+    - oleid:
+        - fixed bug in check_excel (issue #584, PR #585)
+    - clsid:
+        - added several CLSIDs related to MS Office click-to-run issue CVE-2021-27058
+        - added checks to ensure that all CLSIDs are uppercase (PR #678) 
+- **2021-04-02 v0.56.1**:
+    - olevba:
+        - fixed bug when parsing some malformed files (issue #629)
+    - oleobj:
+        - fixed bug preventing detection of links 'externalReference', 'frame', 
+          'hyperlink' (issue #641, PR #670)
+    - setup:
+        - avoid installing msoffcrypto-tool when platform is PyPy+Windows (issue #473)
+        - PyPI version is now a wheel package to improve installation and avoid antivirus 
+          false positives due to test files (issues #215, #398)
 - **2020-09-28 v0.56**:
     - olevba/mraptor:
         - added detection of trigger _OnConnecting
@@ -124,6 +146,7 @@ including
 [REMnux](https://remnux.org/),
 [Snake](https://github.com/countercept/snake),
 [SNDBOX](https://app.sndbox.com),
+[Splunk add-on for MS O365 Email](https://splunkbase.splunk.com/app/5365/),
 [SpuriousEmu](https://github.com/ldbo/SpuriousEmu),
 [Strelka](https://github.com/target/strelka),
 [stoQ](https://stoq.punchcyber.com/),
@@ -187,7 +210,7 @@ License
 This license applies to the python-oletools package, apart from the thirdparty folder which contains third-party files 
 published with their own license.
 
-The python-oletools package is copyright (c) 2012-2020 Philippe Lagadec (http://www.decalage.info)
+The python-oletools package is copyright (c) 2012-2021 Philippe Lagadec (http://www.decalage.info)
 
 All rights reserved.
 

@@ -17,7 +17,7 @@ http://www.decalage.info/python/oletools
 
 #=== LICENSE =================================================================
 
-# oleid is copyright (c) 2012-2019, Philippe Lagadec (http://www.decalage.info)
+# oleid is copyright (c) 2012-2021, Philippe Lagadec (http://www.decalage.info)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -58,8 +58,9 @@ from __future__ import print_function
 # 2018-09-11 v0.54 PL: - olefile is now a dependency
 # 2018-10-19       CH: - accept olefile as well as filename, return Indicators,
 #                        improve encryption detection for ppt
+# 2021-05-07 v0.56.2 MN: - fixed bug in check_excel (issue #584, PR #585)
 
-__version__ = '0.54'
+__version__ = '0.56.2'
 
 
 #------------------------------------------------------------------------------
@@ -342,8 +343,8 @@ class OleID(object):
                 if macro_ind:
                     macro_ind.value = True
                 else:
-                    self.indicators.append('vba_macros', True,
-                                           name='VBA Macros')
+                    macros = Indicator('vba_macros', True, name='VBA Macros')
+                    self.indicators.append(macros)
         return excel
 
     def check_powerpoint(self):

@@ -12,7 +12,7 @@ http://www.decalage.info/python/oletools
 
 #=== LICENSE ==================================================================
 
-# oletools are copyright (c) 2018-2020 Philippe Lagadec (http://www.decalage.info)
+# oletools are copyright (c) 2018-2021 Philippe Lagadec (http://www.decalage.info)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -43,7 +43,7 @@ http://www.decalage.info/python/oletools
 # 2018-04-18       PL: - added known-bad CLSIDs from Cuckoo sandbox (issue #290)
 # 2018-05-08       PL: - added more CLSIDs (issues #299, #304), merged and sorted
 
-__version__ = '0.56'
+__version__ = '0.56.2'
 
 
 # REFERENCES:
@@ -66,10 +66,10 @@ KNOWN_CLSIDS = {
     '00000306-0000-0000-C000-000000000046': 'Pointer Moniker',
     '00000308-0000-0000-C000-000000000046': 'Packager Moniker',
     '00000309-0000-0000-C000-000000000046': 'Composite Moniker (may trigger CVE-2017-8570)',
-    '0000031a-0000-0000-C000-000000000046': 'Class Moniker',
+    '0000031A-0000-0000-C000-000000000046': 'Class Moniker',
     '00000535-0000-0010-8000-00AA006D2EA4': 'ADODB.RecordSet (may trigger CVE-2015-0097)',
-    '0002034c-0000-0000-C000-000000000046': 'OutlookAttachMoniker',
-    '0002034e-0000-0000-C000-000000000046': 'OutlookMessageMoniker',
+    '0002034C-0000-0000-C000-000000000046': 'OutlookAttachMoniker',
+    '0002034E-0000-0000-C000-000000000046': 'OutlookMessageMoniker',
     '00020810-0000-0000-C000-000000000046': 'Microsoft Excel.Sheet.5',
     '00020811-0000-0000-C000-000000000046': 'Microsoft Excel.Chart.5',
     '00020820-0000-0000-C000-000000000046': 'Microsoft Microsoft Excel 97-2003 Worksheet (Excel.Sheet.8)',
@@ -79,7 +79,7 @@ KNOWN_CLSIDS = {
     '00020833-0000-0000-C000-000000000046': 'Microsoft Excel binary sheet with macro enabled (Excel.SheetBinaryMacroEnabled.12)',
     '00020900-0000-0000-C000-000000000046': 'Microsoft Word 6.0-7.0 Document (Word.Document.6)',
     '00020906-0000-0000-C000-000000000046': 'Microsoft Word 97-2003 Document (Word.Document.8)',
-    '00020907-0000-0000-c000-000000000046': 'Microsoft Word Picture (Word.Picture.8)',
+    '00020907-0000-0000-C000-000000000046': 'Microsoft Word Picture (Word.Picture.8)',
     '00020C01-0000-0000-C000-000000000046': 'OLE Package Object (may contain and run any file)',
     '00021401-0000-0000-C000-000000000046': 'Windows LNK Shortcut file', # ref: https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc
     '00021700-0000-0000-C000-000000000046': 'Microsoft Equation 2.0 (Known Related to CVE-2017-11882 or CVE-2018-0802)',
@@ -107,6 +107,8 @@ KNOWN_CLSIDS = {
     '1EFB6596-857C-11D1-B16A-00C0F0283628': 'MSCOMCTL.TabStrip (may trigger CVE-2012-1856, CVE-2013-3906 - often used for heap spray)',
     '233C1507-6A77-46A4-9443-F871F945D258': 'Shockwave Control Objects',
     '23CE100B-1390-49D6-BA00-F17D3AEE149C': 'UmOutlookAddin.UmEvmCtrl (potential exploit document CVE-2016-0042 / MS16-014)',
+    # Referenced in https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=652438 :
+    '29131539-2EED-1069-BF5D-00DD011186B7': 'IBM/Lotus Notes COM interface provided by NLSXBE.DLL (related to CVE-2021-27058)',
     '3018609E-CDBC-47E8-A255-809D46BAA319': 'SSCE DropTable Listener Object (can be used to bypass ASLR after triggering an exploit)',
     '3050F4D8-98B5-11CF-BB82-00AA00BDCE0B': 'HTML Application (may trigger CVE-2017-0199)',
     '33BD73C2-7BB4-48F4-8DBC-82B8B313AE16': 'osf.SandboxManager (Known Related To CVE-2015-1770)',
@@ -157,6 +159,8 @@ KNOWN_CLSIDS = {
     '975797FC-4E2A-11D0-B702-00C04FD8DBF7': 'Loads ELSEXT.DLL (Known Related to CVE-2015-6128)',
     '978C9E23-D4B0-11CE-BF2D-00AA003F40D0': 'Microsoft Forms 2.0 Label (Forms.Label.1)',
     '996BF5E0-8044-4650-ADEB-0B013914E99C': 'MSCOMCTL.ListViewCtrl (may trigger CVE-2012-0158)',
+    # Referenced in https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=652438 :
+    '9C38ED61-D565-4728-AEEE-C80952F0ECDE': 'Virtual Disk Service Loader - vdsldr.exe (related to MS Office click-to-run issue CVE-2021-27058)',
     'A08A033D-1A75-4AB6-A166-EAD02F547959': 'otkloadr WRAssembly Object (can be used to bypass ASLR after triggering an exploit)',
     'B54F3741-5B07-11CF-A4B0-00AA004A55E8': 'vbscript.dll - VB Script Language (ProgID: VBS, VBScript)',
     'B801CA65-A1FC-11D0-85AD-444553540000': 'Adobe Acrobat Document - PDF file',
@@ -175,7 +179,9 @@ KNOWN_CLSIDS = {
     'D70E31AD-2614-49F2-B0FC-ACA781D81F3E': 'AutoCAD 2010-2012 Document',
     'D93CE8B5-3BF8-462C-A03F-DED2730078BA': 'Loads WUAEXT.DLL (Known Related to CVE-2015-6128)',
     'DD9DA666-8594-11D1-B16A-00C0F0283628': 'MSCOMCTL.ImageComboCtrl (may trigger CVE-2014-1761)',
-    'DFEAF541-F3E1-4c24-ACAC-99C30715084A': 'Silverlight Objects',
+    # Referenced in https://resources.sei.cmu.edu/library/asset-view.cfm?assetid=652438 :
+    'DF630910-1C1D-11D0-AE36-8C0F5E000000': 'pythoncomloader27.dll (related to CVE-2021-27058)',
+    'DFEAF541-F3E1-4C24-ACAC-99C30715084A': 'Silverlight Objects',
     'E5CA59F5-57C4-4DD8-9BD6-1DEEEDD27AF4': 'InkEd.InkEdit',
     'E8CC4CBE-FDFF-11D0-B865-00A0C9081C1D': 'MSDAORA.1 (potential exploit CVE TODO)', # TODO
     'E8CC4CBF-FDFF-11D0-B865-00A0C9081C1D': 'Loads OCI.DLL (Known Related to CVE-2015-6128)',
