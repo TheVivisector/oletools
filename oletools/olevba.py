@@ -278,11 +278,6 @@ from io import BytesIO, StringIO
 import math
 
 try:
-    from oletools.thirdparty.xxxzip import zipfile
-except ImportError:
-    import zipfile
-
-try:
     import re2 as re
 except ImportError:
     import re
@@ -358,7 +353,15 @@ if sys.version_info[0] <= 2:
     byte_ord = ord
     #: Default string encoding for the olevba API
     DEFAULT_API_ENCODING = 'utf8'  # on Python 2: UTF-8 (bytes)
+    try:
+        from oletools.thirdparty.xxxzip import zipfile27 as zipfile
+    except ImportError:
+        import zipfile
 else:
+    try:
+        from oletools.thirdparty.xxxzip import zipfile
+    except ImportError:
+        import zipfile
     # Python 3.x+
     PYTHON2 = False
 

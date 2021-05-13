@@ -59,10 +59,16 @@ __version__ = '0.54.2'
 import sys
 from oletools.common.log_helper import log_helper
 from oletools.common.io_encoding import uopen
-try:
-    from oletools.thirdparty.xxxzip.zipfile import ZipFile, BadZipfile, is_zipfile
-except:
-    from zipfile import ZipFile, BadZipfile, is_zipfile
+if sys.version_info[0] <= 2:
+    try:
+        from oletools.thirdparty.xxxzip.zipfile27 import ZipFile, BadZipfile, is_zipfile
+    except ImportError:
+        from zipfile import ZipFile, BadZipfile, is_zipfile
+else:
+    try:
+        from oletools.thirdparty.xxxzip.zipfile import ZipFile, BadZipfile, is_zipfile        
+    except ImportError:
+        from zipfile import ZipFile, BadZipfile, is_zipfile
 
 from os.path import splitext
 import io

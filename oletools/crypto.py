@@ -101,10 +101,16 @@ import struct
 import os
 from os.path import splitext, isfile
 from tempfile import mkstemp
-try:
-    from oletools.thirdparty.xxxzip import zipfile
-except ImportError:
-    import zipfile
+if sys.version_info[0] <= 2:
+    try:
+        from oletools.thirdparty.xxxzip import zipfile27 as zipfile        
+    except ImportError:
+        import zipfile
+else:
+    try:
+        from oletools.thirdparty.xxxzip import zipfile
+    except ImportError:
+        import zipfile
 
 import logging
 

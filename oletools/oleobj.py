@@ -54,11 +54,16 @@ except ImportError:
 
 import sys
 import io
-try:
-    from oletools.thirdparty.xxxzip.zipfile import is_zipfile
-except ImportError:
-    from zipfile import is_zipfile
-
+if sys.version_info[0] <= 2:
+    try:
+        from oletools.thirdparty.xxxzip.zipfile27 import is_zipfile
+    except ImportError:
+        import zipfile
+else:
+    try:
+        from oletools.thirdparty.xxxzip.zipfile import is_zipfile
+    except ImportError:
+        import zipfile
 import olefile
 
 # IMPORTANT: it should be possible to run oletools directly as scripts
