@@ -805,9 +805,9 @@ def process_csv(filepath):
                 logger.debug("last attempt: take whole file as single unquoted " "cell")
                 file_handle.seek(0)
                 newfile = file_handle.read(CSV_SMALL_THRESH).replace("\0", "")
-                cell_pipe_parts = cell.split("|")
+                cell_pipe_parts = newfile.split("|")
                 cell_pipe_parts[0] = cell_pipe_parts[0].replace("\x20", "")
-                cell = "|".join(cell_pipe_parts)
+                newfile = "|".join(cell_pipe_parts)
                 match = CSV_DDE_FORMAT.match(newfile)
                 if match:
                     results.append(u" ".join(match.groups()[:2]))
@@ -816,7 +816,9 @@ def process_csv(filepath):
         if not results:
             try:
                 if os.path.getsize(filepath) < 5 * 1024 * 1024:
-                    with open(filepath, newline="", encoding="ISO-8859-1") as csvfile:
+                    if sys.version_info.major > 2:
+                        open_arg["encoding"]="ISO-8859-1"
+                    with open(filepath, **open_arg) as csvfile:
                         spamreader = csv.reader((line.replace("\0", "") for line in csvfile), escapechar="\\")
                         for row in spamreader:
                             for cell in row:
@@ -832,7 +834,7 @@ def process_csv(filepath):
                                     match = CSV_DDE_FORMAT.search(cell)
                                     if match:
                                         results.append(u" ".join(match.groups()[:2]))
-            except exception as e:
+            except Exception as e:
                 logger.debug("couldn't perform CSV alt match check {0}".format(e))
     return u"\n".join(results)
 
