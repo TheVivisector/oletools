@@ -756,7 +756,9 @@ CSV_SMALL_THRESH = 8193
 # format of dde link: program-name | arguments ! unimportant
 # can be enclosed in "", prefixed with + or = or - or cmds like @SUM(...)
 CSV_DDE_FORMAT = re.compile(r'\s*"?[=+-@](.+)\|\s*\'(.+)\'\!(.*)\s*')
-
+CSV_DDE_FORMAT_2 = re.compile(
+    r'\s*"?[=+-@](?P<meat>(.*?)((ms(build|excel|iexec|hta)|(c(m(stp|d)|script|ertutil)|w(inword|script|mic)|(r(egsvr|undll)32|schtasks))))\s*\|\s*\'(.+))(?:\'\s*!|\s*$)'
+)
 # allowed delimiters (python sniffer would use nearly any char). Taken from
 # https://data-gov.tw.rpi.edu/wiki/CSV_files_use_delimiters_other_than_commas
 CSV_DELIMITERS = ",\t ;|^"
@@ -817,23 +819,27 @@ def process_csv(filepath):
             try:
                 if os.path.getsize(filepath) < 5 * 1024 * 1024:
                     if sys.version_info.major > 2:
-                        open_arg["encoding"]="ISO-8859-1"
+                        open_arg["encoding"] = "ISO-8859-1"
                     with open(filepath, **open_arg) as csvfile:
                         spamreader = csv.reader((line.replace("\0", "") for line in csvfile), escapechar="\\")
                         for row in spamreader:
                             for cell in row:
-                                if (
-                                    "|" in cell
-                                    and "!" in cell
-                                    and any(x in cell for x in ["@", "=", "-", "+"])
-                                    and re.search(r"\|\s*\x27", cell)
-                                ):
+                                if "|" in cell and any(x in cell for x in ["@", "=", "-", "+"]) and re.search(r"\|\s*\x27", cell):
                                     cell_pipe_parts = cell.split("|")
                                     cell_pipe_parts[0] = cell_pipe_parts[0].replace("\x20", "")
                                     cell = "|".join(cell_pipe_parts)
                                     match = CSV_DDE_FORMAT.search(cell)
                                     if match:
-                                        results.append(u" ".join(match.groups()[:2]))
+                                        new_cmd = u" ".join(match.groups()[:2])
+                                        if new_cmd not in results:
+                                            results.append(new_cmd)
+                                    else:
+                                        match2 = CSV_DDE_FORMAT_2.search(cell)
+                                        if match2:
+                                            new_cmd = u"{0}".format(match2.group("meat"))
+                                            if new_cmd not in results:
+                                                results.append(new_cmd)
+
             except Exception as e:
                 logger.debug("couldn't perform CSV alt match check {0}".format(e))
     return u"\n".join(results)
