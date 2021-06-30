@@ -778,10 +778,7 @@ def process_csv(filepath):
     Cannot deal with unicode files yet (need more than just use uopen()).
     """
     results = []
-    if sys.version_info.major <= 2:
-        open_arg = dict(mode="rb")
-    else:
-        open_arg = dict(newline="")
+    open_arg = find_csv_encoding(filepath)
     with open(filepath, **open_arg) as file_handle:
         results = []
         is_small = file_handle.tell() < CSV_SMALL_THRESH
@@ -818,8 +815,7 @@ def process_csv(filepath):
         if not results:
             try:
                 if os.path.getsize(filepath) < 5 * 1024 * 1024:
-                    if sys.version_info.major > 2:
-                        open_arg["encoding"] = "ISO-8859-1"
+                    open_arg = find_csv_encoding(filepath)
                     with open(filepath, **open_arg) as csvfile:
                         spamreader = csv.reader((line.replace("\0", "") for line in csvfile), escapechar="\\")
                         for row in spamreader:
@@ -869,6 +865,29 @@ def process_csv_dialect(file_handle, delimiters):
                 results.append(u" ".join(match.groups()[:2]))
     return results, dialect
 
+
+def find_csv_encoding(filepath):
+    #if it's py2 let's assume they do the right thing
+    if sys.version_info.major <= 2:
+        open_arg = dict(mode="rb")
+        return(open_arg)
+    encoding_list = ["utf-8", "cp1252", "ISO-8859-1", "ascii"]
+    for encoding in encoding_list:
+        worked = True
+        open_arg = dict(newline="")
+        try:
+            open_arg["encoding"] = encoding
+            with open(filepath, **open_arg) as csvfile:
+                spamreader = csv.reader((line.replace("\0", "") for line in csvfile), escapechar="\\")
+                foo = next(spamreader)
+        except Exception as e:
+            logger.debug(e)
+            worked = False
+        if worked:
+            logger.debug("encoding {0} worked for CSV file running with that".format(encoding))
+            return open_arg
+    open_arg = dict(newline="")
+    return open_arg
 
 #: format of dde formula in excel xml files
 XML_DDE_FORMAT = CSV_DDE_FORMAT
