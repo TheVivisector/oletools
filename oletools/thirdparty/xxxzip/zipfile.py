@@ -189,6 +189,13 @@ def _strip_extra(extra, xids):
 
 def _check_zipfile(fp):
     try:
+        if fp.read(4) != stringFileHeader:
+            return False
+    except:
+        return False
+    finally:
+        fp.seek(0)
+    try:
         if _EndRecData(fp):
             return True         # file has correct magic number
     except OSError:

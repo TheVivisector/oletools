@@ -344,7 +344,6 @@ from oletools.common.io_encoding import ensure_stdout_handles_unicode
 from oletools.common import codepages
 
 # === PYTHON 2+3 SUPPORT ======================================================
-
 if sys.version_info[0] <= 2:
     # Python 2.x
     PYTHON2 = True
@@ -393,7 +392,6 @@ else:
         codecs.register_error("backslashreplace", backslashreplace_errors)
 
 MAX_FILE_READ = 104857600 
-
 def unicode2str(unicode_string):
     """
     convert a unicode string to a native str:
@@ -2795,9 +2793,9 @@ class VBA_Parser(object):
             if (self.type is None and
                 b'mime' in data_lowercase and
                 b'version' in data_lowercase and
-                b'multipart' in data_lowercase and
-                abs(data_lowercase.index(b'version') - data_lowercase.index(b'mime')) < 20):
-                self.open_mht(data)
+                b'multipart' in data_lowercase):
+                #and abs(data_lowercase.index(b'version') - data_lowercase.index(b'mime')) < 20):
+                    self.open_mht(data)
         #TODO: handle exceptions
         #TODO: Excel 2003 XML
             # Check whether this is rtf
@@ -3026,15 +3024,20 @@ class VBA_Parser(object):
             # strip any junk from the beginning of the file
             # (issue #31 fix by Greg C - gdigreg)
             # TODO: improve keywords to avoid false positives
-            mime_offset = stripped_data.find(b'MIME')
-            content_offset = stripped_data.find(b'Content')
-            # if "MIME" is found, and located before "Content":
-            if -1 < mime_offset <= content_offset:
-                stripped_data = stripped_data[mime_offset:]
-            # else if "Content" is found, and before "MIME"
-            # TODO: can it work without "MIME" at all?
-            elif content_offset > -1:
-                stripped_data = stripped_data[content_offset:]
+            m=re.search(b'(?si)mime\s*-\s*version.*?content\s*-\s*type?',stripped_data)
+            if m:
+                stripped_data = stripped_data[m.start():]
+                stripped_data = re.sub(b'(?si)mime\s*-\s*version\s*?\:[^\r\n]*\r?\n',b"MIME-Version: 1.0\r\n",stripped_data)
+            else:
+                mime_offset = stripped_data.find(b'MIME')
+                content_offset = stripped_data.find(b'Content')
+                # if "MIME" is found, and located before "Content":
+                if -1 < mime_offset <= content_offset:
+                    stripped_data = stripped_data[mime_offset:]
+                # else if "Content" is found, and before "MIME"
+                # TODO: can it work without "MIME" at all?
+                elif content_offset > -1:
+                    stripped_data = stripped_data[content_offset:]
             # TODO: quick and dirty fix: insert a standard line with MIME-Version header?
             # monkeypatch email to fix issue #32:
             # allow header lines without ":"
@@ -3047,8 +3050,11 @@ class VBA_Parser(object):
                 else:
                     # on Python 3, need to use message_from_bytes instead:
                     mhtml = email.message_from_bytes(stripped_data)
+            except Exception as e:
+                log.debug(e)
             finally:
                 email.feedparser.headerRE = oldHeaderRE
+                mhtml = email.message_from_bytes(stripped_data)
             # find all the attached files:
             for part in mhtml.walk():
                 content_type = part.get_content_type()  # always returns a value
