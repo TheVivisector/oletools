@@ -3044,6 +3044,7 @@ class VBA_Parser(object):
             oldHeaderRE = email.feedparser.headerRE
             loosyHeaderRE = re.compile(r'^(From |[\041-\071\073-\176]{1,}:?|[\t ])')
             email.feedparser.headerRE = loosyHeaderRE
+            mhtml = None
             try:
                 if PYTHON2:
                     mhtml = email.message_from_string(stripped_data)
@@ -3053,8 +3054,14 @@ class VBA_Parser(object):
             except Exception as e:
                 log.debug(e)
             finally:
-                email.feedparser.headerRE = oldHeaderRE
-                mhtml = email.message_from_bytes(stripped_data)
+                if not mhtml:
+                   email.feedparser.headerRE = oldHeaderRE
+                   if PYTHON2:
+                       mhtml = email.message_from_string(stripped_data)
+                   else:
+                       # on Python 3, need to use message_from_bytes instead:
+                       mhtml = email.message_from_bytes(stripped_data)
+                   
             # find all the attached files:
             for part in mhtml.walk():
                 content_type = part.get_content_type()  # always returns a value
