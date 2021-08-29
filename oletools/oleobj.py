@@ -764,7 +764,7 @@ def process_file(filename, data, output_dir=None):
     err_stream = False
     err_dumping = False
     did_dump = False
-
+    dump_data = [] 
     xml_parser = None
     if is_zipfile(filename):
         log.info('file could be an OOXML file, looking for relationships with '
@@ -816,6 +816,7 @@ def process_file(filename, data, output_dir=None):
 
                 # dump
                 try:
+                    tmp_dict = {u'Filename': u'{0}'.format(opkg.filename), u'SourcePath': u'{0}'.format(opkg.src_path), u'TempPath': u'{0}'.format(opkg.temp_path), u'OutputFile': u'{0}'.format(fname)}
                     print('saving to file %s' % fname)
                     with open(fname, 'wb') as writer:
                         n_dumped = 0
@@ -831,6 +832,7 @@ def process_file(filename, data, output_dir=None):
                             next_size = min(DUMP_CHUNK_SIZE,
                                             opkg.actual_size - n_dumped)
                     did_dump = True
+                    dump_data.append(tmp_dict)
                 except Exception as exc:
                     log.warning('error dumping to {0} ({1})'
                                 .format(fname, exc))
@@ -839,7 +841,7 @@ def process_file(filename, data, output_dir=None):
                     stream.close()
 
                 index += 1
-    return err_stream, err_dumping, did_dump
+    return err_stream, err_dumping, did_dump, dump_data 
 
 
 # === MAIN ====================================================================
@@ -926,7 +928,7 @@ def main(cmd_line_args=None):
     any_err_stream = False
     any_err_dumping = False
     any_did_dump = False
-
+    all_dump_data = []
     for container, filename, data in \
             xglob.iter_files(options.input, recursive=options.recursive,
                              zip_password=options.zip_password,
@@ -934,12 +936,12 @@ def main(cmd_line_args=None):
         # ignore directory names stored in zip files:
         if container and filename.endswith('/'):
             continue
-        err_stream, err_dumping, did_dump = \
+        err_stream, err_dumping, did_dump ,dump_data = \
             process_file(filename, data, options.output_dir)
         any_err_stream |= err_stream
         any_err_dumping |= err_dumping
         any_did_dump |= did_dump
-
+        all_dump_data.extend(dump_data)
     # assemble return value
     return_val = RETURN_NO_DUMP
     if any_did_dump:

@@ -68,7 +68,7 @@ def preread_file(args):
         raise ValueError('ignore_arg not as expected!')
     with open(filename, 'rb') as file_handle:
         data = file_handle.read()
-    err_stream, err_dumping, did_dump = \
+    err_stream, err_dumping, did_dump, dump_data = \
         oleobj.process_file(filename, data, output_dir=output_dir)
     if did_dump and not err_stream and not err_dumping:
         return oleobj.RETURN_DID_DUMP
