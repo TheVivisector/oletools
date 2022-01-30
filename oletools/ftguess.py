@@ -53,7 +53,6 @@ __version__ = '0.60.1.dev4'
 
 import sys
 import io
-import zipfile
 import os
 import olefile
 import logging
@@ -90,6 +89,24 @@ if _parent_dir not in sys.path:
 
 from oletools.common import clsid
 from oletools.thirdparty.xglob import xglob
+
+if sys.version_info[0] <= 2:
+    # Python 2.x
+    PYTHON2 = True
+    # to use ord on bytes/bytearray items the same way in Python 2+3
+    # on Python 2, just use the normal ord() because items are bytes
+    byte_ord = ord
+    #: Default string encoding for the olevba API
+    DEFAULT_API_ENCODING = 'utf8'  # on Python 2: UTF-8 (bytes)
+    try:
+        from oletools.thirdparty.xxxzip import zipfile27 as zipfile
+    except ImportError:
+        import zipfile
+else:
+    try:
+        from oletools.thirdparty.xxxzip import zipfile
+    except ImportError:
+        import zipfile
 
 # === LOGGING =================================================================
 

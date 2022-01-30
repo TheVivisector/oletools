@@ -270,7 +270,6 @@ def _EndRecData(fpin):
     # Determine file size
     fpin.seek(0, 2)
     filesize = fpin.tell()
-
     # Check to see if this is ZIP file with no archive comment (the
     # "end of central directory" structure should be the last item in the
     # file if this is the case).
