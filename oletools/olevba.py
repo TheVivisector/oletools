@@ -32,7 +32,7 @@ https://github.com/unixfreak0037/officeparser
 
 # === LICENSE ==================================================================
 
-# olevba is copyright (c) 2014-2021 Philippe Lagadec (http://www.decalage.info)
+# olevba is copyright (c) 2014-2022 Philippe Lagadec (http://www.decalage.info)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -235,7 +235,7 @@ from __future__ import print_function
 #                        for issue #619)
 # 2021-04-14       PL: - added detection of Workbook_BeforeClose (issue #518)
 
-__version__ = '0.60.1.dev3'
+__version__ = '0.60.1.dev6'
 
 #------------------------------------------------------------------------------
 # TODO:
@@ -3453,7 +3453,7 @@ class VBA_Parser(object):
         xlm += result
         xlm.append('- ' * 38)
         xlm.append('EMULATION - DEOBFUSCATED EXCEL4/XLM MACRO FORMULAS:')
-        result = xlmdeobfuscator.process_file(file=sys.argv[1],
+        result = xlmdeobfuscator.process_file(file=self.filename,
                                            noninteractive=True,
                                            noindent=True,
                                            # output_formula_format='CELL:[[CELL_ADDR]], [[INT-FORMULA]]',
