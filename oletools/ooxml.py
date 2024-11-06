@@ -44,7 +44,7 @@ http://www.decalage.info/python/oletools
 # CHANGELOG:
 # 2018-12-06       CH: - ensure stdout can handle unicode
 
-__version__ = '0.54.2'
+__version__ = "0.54.2"
 
 # -- TODO ---------------------------------------------------------------------
 
@@ -59,6 +59,7 @@ __version__ = '0.54.2'
 import sys
 from oletools.common.log_helper import log_helper
 from oletools.common.io_encoding import uopen
+
 if sys.version_info[0] <= 2:
     try:
         from oletools.thirdparty.xxxzip.zipfile27 import ZipFile, BadZipfile, is_zipfile
@@ -66,7 +67,7 @@ if sys.version_info[0] <= 2:
         from zipfile import ZipFile, BadZipfile, is_zipfile
 else:
     try:
-        from oletools.thirdparty.xxxzip.zipfile import ZipFile, BadZipfile, is_zipfile        
+        from oletools.thirdparty.xxxzip.zipfile import ZipFile, BadZipfile, is_zipfile
     except ImportError:
         from zipfile import ZipFile, BadZipfile, is_zipfile
 
@@ -92,48 +93,47 @@ except ImportError:
 ###############################################################################
 
 
-logger = log_helper.get_or_create_silent_logger('ooxml')
+logger = log_helper.get_or_create_silent_logger("ooxml")
 
 #: subfiles that have to be part of every ooxml file
-FILE_CONTENT_TYPES = '[Content_Types].xml'
-FILE_RELATIONSHIPS = '_rels/.rels'
+FILE_CONTENT_TYPES = "[Content_Types].xml"
+FILE_RELATIONSHIPS = "_rels/.rels"
 
 #: start of content type attributes
 CONTENT_TYPES_EXCEL = (
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.',
-    'application/vnd.ms-excel.',
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.",
+    "application/vnd.ms-excel.",
 )
-CONTENT_TYPES_WORD = (
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.',
-)
-CONTENT_TYPES_PPT = (
-    'application/vnd.openxmlformats-officedocument.presentationml.',
-)
+CONTENT_TYPES_WORD = ("application/vnd.openxmlformats-officedocument.wordprocessingml.",)
+CONTENT_TYPES_PPT = ("application/vnd.openxmlformats-officedocument.presentationml.",)
+
+CONTENT_TYPES_VISIO = ("application/vnd.ms-visio.drawing.",)
 
 #: other content types (currently unused)
 CONTENT_TYPES_NEUTRAL = (
-    'application/xml',
-    'application/vnd.openxmlformats-package.relationships+xml',
-    'application/vnd.openxmlformats-package.core-properties+xml',
-    'application/vnd.openxmlformats-officedocument.theme+xml',
-    'application/vnd.openxmlformats-officedocument.extended-properties+xml'
+    "application/xml",
+    "application/vnd.openxmlformats-package.relationships+xml",
+    "application/vnd.openxmlformats-package.core-properties+xml",
+    "application/vnd.openxmlformats-officedocument.theme+xml",
+    "application/vnd.openxmlformats-officedocument.extended-properties+xml",
 )
 
 #: constants used to determine type of single-xml files
 OFFICE_XML_PROGID_REGEX = r'<\?mso-application progid="(.*)"\?>'
-WORD_XML_PROG_ID = 'Word.Document'
-EXCEL_XML_PROG_ID = 'Excel.Sheet'
+WORD_XML_PROG_ID = "Word.Document"
+EXCEL_XML_PROG_ID = "Excel.Sheet"
 
 #: constants for document type
-DOCTYPE_WORD = 'word'
-DOCTYPE_EXCEL = 'excel'
-DOCTYPE_POWERPOINT = 'powerpoint'
-DOCTYPE_NONE = 'none'
-DOCTYPE_MIXED = 'mixed'
-DOCTYPE_WORD_XML = 'word-xml'
-DOCTYPE_EXCEL_XML = 'excel-xml'
-DOCTYPE_WORD_XML2003 = 'word-xml2003'
-DOCTYPE_EXCEL_XML2003 = 'excel-xml2003'
+DOCTYPE_WORD = "word"
+DOCTYPE_EXCEL = "excel"
+DOCTYPE_POWERPOINT = "powerpoint"
+DOCTYPE_NONE = "none"
+DOCTYPE_MIXED = "mixed"
+DOCTYPE_WORD_XML = "word-xml"
+DOCTYPE_EXCEL_XML = "excel-xml"
+DOCTYPE_WORD_XML2003 = "word-xml2003"
+DOCTYPE_EXCEL_XML2003 = "excel-xml2003"
+DOCTYPE_VISIO = "visio"
 
 
 ###############################################################################
@@ -142,42 +142,46 @@ DOCTYPE_EXCEL_XML2003 = 'excel-xml2003'
 
 
 def debug_str(elem):
-    """ for debugging: print an element """
+    """for debugging: print an element"""
     if elem is None:
-        return u'None'
-    if elem.tag[0] == '{' and elem.tag.count('}') == 1:
-        parts = ['[tag={{...}}{0}'.format(elem.tag[elem.tag.index('}')+1:]), ]
+        return "None"
+    if elem.tag[0] == "{" and elem.tag.count("}") == 1:
+        parts = [
+            "[tag={{...}}{0}".format(elem.tag[elem.tag.index("}") + 1 :]),
+        ]
     else:
-        parts = ['[tag={0}'.format(elem.tag), ]
+        parts = [
+            "[tag={0}".format(elem.tag),
+        ]
     if elem.text:
-        parts.append(u'text="{0}"'.format(elem.text.replace('\n', '\\n')))
+        parts.append('text="{0}"'.format(elem.text.replace("\n", "\\n")))
     if elem.tail:
-        parts.append(u'tail="{0}"'.format(elem.tail.replace('\n', '\\n')))
+        parts.append('tail="{0}"'.format(elem.tail.replace("\n", "\\n")))
     for key, value in elem.attrib.items():
-        parts.append(u'{0}="{1}"'.format(key, value))
-        if key == 'ContentType':
+        parts.append('{0}="{1}"'.format(key, value))
+        if key == "ContentType":
             if value.startswith(CONTENT_TYPES_EXCEL):
-                parts[-1] += u'-->xls'
+                parts[-1] += "-->xls"
             elif value.startswith(CONTENT_TYPES_WORD):
-                parts[-1] += u'-->doc'
+                parts[-1] += "-->doc"
             elif value.startswith(CONTENT_TYPES_PPT):
-                parts[-1] += u'-->ppt'
+                parts[-1] += "-->ppt"
             elif value in CONTENT_TYPES_NEUTRAL:
-                parts[-1] += u'-->_'
+                parts[-1] += "-->_"
             else:
-                parts[-1] += u'!!!'
+                parts[-1] += "!!!"
 
-    text = u', '.join(parts)
+    text = ", ".join(parts)
     if len(text) > 150:
-        return text[:147] + u'...]'
-    return text + u']'
+        return text[:147] + "...]"
+    return text + "]"
 
 
 def isstr(some_var):
-    """ version-independent test for isinstance(some_var, (str, unicode)) """
+    """version-independent test for isinstance(some_var, (str, unicode))"""
     if sys.version_info.major == 2:
         return isinstance(some_var, basestring)  # true for str and unicode
-    return isinstance(some_var, str)         # there is no unicode
+    return isinstance(some_var, str)  # there is no unicode
 
 
 ###############################################################################
@@ -186,11 +190,11 @@ def isstr(some_var):
 
 
 def get_type(filename):
-    """ return one of the DOCTYPE_* constants or raise error """
+    """return one of the DOCTYPE_* constants or raise error"""
     parser = XmlParser(filename)
     if parser.is_single_xml():
         match = None
-        with uopen(filename, 'rb') as handle:
+        with uopen(filename, "rb") as handle:
             match = re.search(OFFICE_XML_PROGID_REGEX, handle.read(1024))
         if not match:
             return DOCTYPE_NONE
@@ -204,22 +208,49 @@ def get_type(filename):
     is_doc = False
     is_xls = False
     is_ppt = False
+    is_visio = False
     try:
         for _, elem, _ in parser.iter_xml(FILE_CONTENT_TYPES):
-            logger.debug(u'  ' + debug_str(elem))
+            logger.debug("  " + debug_str(elem))
             try:
-                content_type = elem.attrib['ContentType']
-            except KeyError:         # ContentType not an attr
+                content_type = elem.attrib["ContentType"]
+            except KeyError:  # ContentType not an attr
                 continue
             is_xls |= content_type.startswith(CONTENT_TYPES_EXCEL)
             is_doc |= content_type.startswith(CONTENT_TYPES_WORD)
             is_ppt |= content_type.startswith(CONTENT_TYPES_PPT)
+            is_visio |= content_type.startswith(CONTENT_TYPES_VISIO)
     except BadOOXML as oo_err:
-        if oo_err.more_info.startswith('invalid subfile') and \
-                FILE_CONTENT_TYPES in oo_err.more_info:
+        if oo_err.more_info.startswith("invalid subfile") and FILE_CONTENT_TYPES in oo_err.more_info:
             # no FILE_CONTENT_TYPES in zip, so probably no ms office xml.
             return DOCTYPE_NONE
         raise
+
+    if not is_doc and not is_xls and not is_ppt and not is_visio:
+        try:
+            for _, elem, _ in parser.iter_xml(FILE_CONTENT_TYPES):
+                if elem.tag.endswith("Default"):
+                    continue
+                elif elem.tag.endswith("Override"):
+                    subfile = elem.attrib["PartName"]
+                    if subfile.startswith("/") or subfile.startswith("\\"):
+                        subfile = subfile[1:]
+                    if any(
+                        subfile.lower().startswith(x) for x in ["word/" "xl/", "ppt/", "visio/", "word\x5c", "xl\x5c", "ppt\x5c", "visio\x5c"]
+                    ) and subfile.lower().endswith((".xml")):
+                        try:
+                            content_type = elem.attrib["ContentType"]
+                        except KeyError:
+                            continue
+                        is_xls |= content_type.startswith(CONTENT_TYPES_EXCEL)
+                        is_doc |= content_type.startswith(CONTENT_TYPES_WORD)
+                        is_ppt |= content_type.startswith(CONTENT_TYPES_PPT)
+                        is_visio |= content_type.startswith(CONTENT_TYPES_VISIO)
+        except BadOOXML as oo_err:
+            if oo_err.more_info.startswith("invalid subfile") and FILE_CONTENT_TYPES in oo_err.more_info:
+                # no FILE_CONTENT_TYPES in zip, so probably no ms office xml.
+                # Maybe OpenDocument format? In any case, try to analyze.
+                pass
 
     if is_doc and not is_xls and not is_ppt:
         return DOCTYPE_WORD
@@ -227,19 +258,21 @@ def get_type(filename):
         return DOCTYPE_EXCEL
     if not is_doc and not is_xls and is_ppt:
         return DOCTYPE_POWERPOINT
-    if not is_doc and not is_xls and not is_ppt:
+    if not is_doc and not is_xls and not is_ppt and is_visio:
+        return DOCTYPE_VISIO
+    if not is_doc and not is_xls and not is_ppt and not is_visio:
         return DOCTYPE_NONE
-    logger.warning('Encountered contradictory content types')
+    logger.warning("Encountered contradictory content types")
     return DOCTYPE_MIXED
 
 
 def is_ooxml(filename):
-    """ Determine whether given file is an ooxml file; tries get_type """
+    """Determine whether given file is an ooxml file; tries get_type"""
     try:
         doctype = get_type(filename)
     except BadOOXML:
         return False
-    except IOError:   # one of the required files is not present
+    except IOError:  # one of the required files is not present
         return False
     except Exception as e:
         return False
@@ -254,7 +287,7 @@ def is_ooxml(filename):
 
 
 class ZipSubFile(object):
-    """ A file-like object like ZipFile.open returns them, with size and seek()
+    """A file-like object like ZipFile.open returns them, with size and seek()
 
     ZipFile.open() gives file handles that can be read but not seek()ed since
     the file is being decompressed in the background. This class implements a
@@ -285,20 +318,20 @@ class ZipSubFile(object):
     See also (and maybe could some day merge with):
     ppt_record_parser.IterStream; also: oleobj.FakeFile
     """
+
     CHUNK_SIZE = 4096
 
-    def __init__(self, container, filename, mode='r', size=None):
-        """ remember all necessary vars but do not open yet """
+    def __init__(self, container, filename, mode="r", size=None):
+        """remember all necessary vars but do not open yet"""
         self.container = container
         self.name = filename
         if size is None:
             self.size = container.getinfo(filename).file_size
-            logger.debug('zip stream has size {0}'.format(self.size))
+            logger.debug("zip stream has size {0}".format(self.size))
         else:
             self.size = size
-        if 'w' in mode.lower():
-            raise ValueError('Can only read, mode "{0}" not allowed'
-                             .format(mode))
+        if "w" in mode.lower():
+            raise ValueError('Can only read, mode "{0}" not allowed'.format(mode))
         self.mode = mode
         self.handle = None
         self.pos = None
@@ -314,9 +347,9 @@ class ZipSubFile(object):
         return True
 
     def open(self):
-        """ open subfile for reading; open mode given to constructor before """
+        """open subfile for reading; open mode given to constructor before"""
         if self.handle is not None:
-            raise IOError('re-opening file not supported!')
+            raise IOError("re-opening file not supported!")
         self.handle = self.container.open(self.name, self.mode)
         self.pos = 0
         self.closed = False
@@ -324,8 +357,8 @@ class ZipSubFile(object):
         return self
 
     def write(self, *args, **kwargs):
-        """ write is not allowed """
-        raise IOError('writing not implemented')
+        """write is not allowed"""
+        raise IOError("writing not implemented")
 
     def read(self, size=-1):
         """
@@ -334,17 +367,17 @@ class ZipSubFile(object):
         returns bytes (i.e. str in python2, bytes in python3)
         """
         if self.handle is None:
-            raise IOError('read on closed handle')
+            raise IOError("read on closed handle")
         if self.pos >= self.size:
             # print('ZipSubFile: read fake at end')
-            return b''   # fake being at the end, even if we are not
+            return b""  # fake being at the end, even if we are not
         data = self.handle.read(size)
         self.pos += len(data)
         # print('ZipSubFile: read {} bytes, pos now {}'.format(size, self.pos))
         return data
 
     def seek(self, pos, offset=io.SEEK_SET):
-        """ re-position point so read() will continue elsewhere """
+        """re-position point so read() will continue elsewhere"""
         # calc target position from self.pos, pos and offset
         if offset == io.SEEK_SET:
             new_pos = pos
@@ -353,13 +386,12 @@ class ZipSubFile(object):
         elif offset == io.SEEK_END:
             new_pos = self.size + pos
         else:
-            raise ValueError("invalid offset {0}, need SEEK_* constant"
-                             .format(offset))
+            raise ValueError("invalid offset {0}, need SEEK_* constant".format(offset))
 
         # now get to that position, doing reads and resets as necessary
         if new_pos < 0:
             # print('ZipSubFile: Error: seek to {}'.format(new_pos))
-            raise IOError('Seek beyond start of file not allowed')
+            raise IOError("Seek beyond start of file not allowed")
         elif new_pos == self.pos:
             # print('ZipSubFile: nothing to do')
             pass
@@ -369,38 +401,38 @@ class ZipSubFile(object):
         elif new_pos < self.pos:
             # print('ZipSubFile: seek back')
             self.reset()
-            self._seek_skip(new_pos)             # --> read --> update self.pos
+            self._seek_skip(new_pos)  # --> read --> update self.pos
         elif new_pos < self.size:
             # print('ZipSubFile: seek forward')
             self._seek_skip(new_pos - self.pos)  # --> read --> update self.pos
-        else:   # new_pos >= self.size
+        else:  # new_pos >= self.size
             # print('ZipSubFile: seek to end')
-            self.pos = new_pos    # fake being at the end; remember pos >= size
+            self.pos = new_pos  # fake being at the end; remember pos >= size
 
     def _seek_skip(self, to_skip):
-        """ helper for seek: skip forward by given amount using read() """
+        """helper for seek: skip forward by given amount using read()"""
         # print('ZipSubFile: seek by skipping {} bytes starting at {}'
         #       .format(self.pos, to_skip))
         n_chunks, leftover = divmod(to_skip, self.CHUNK_SIZE)
         for _ in range(n_chunks):
-            self.read(self.CHUNK_SIZE)    # just read and discard
+            self.read(self.CHUNK_SIZE)  # just read and discard
         self.read(leftover)
         # print('ZipSubFile: seek by skipping done, pos now {}'
         #       .format(self.pos))
 
     def tell(self):
-        """ inform about position of next read """
+        """inform about position of next read"""
         # print('ZipSubFile: tell-ing we are at {}'.format(self.pos))
         return self.pos
 
     def reset(self):
-        """ close and re-open """
+        """close and re-open"""
         # print('ZipSubFile: resetting')
         self.close()
         self.open()
 
     def close(self):
-        """ close file """
+        """close file"""
         # print('ZipSubFile: closing')
         if self.handle is not None:
             self.handle.close()
@@ -409,39 +441,36 @@ class ZipSubFile(object):
         self.closed = True
 
     def __enter__(self):
-        """ start of context manager; opens the file """
+        """start of context manager; opens the file"""
         # print('ZipSubFile: entering context')
         self.open()
         return self
 
     def __exit__(self, *args, **kwargs):
-        """ end of context manager; closes the file """
+        """end of context manager; closes the file"""
         # print('ZipSubFile: exiting context')
         self.close()
 
     def __str__(self):
-        """ creates a nice textual representation for this object """
+        """creates a nice textual representation for this object"""
         if self.handle is None:
-            status = 'closed'
+            status = "closed"
         elif self.pos == 0:
-            status = 'open, at start'
+            status = "open, at start"
         elif self.pos >= self.size:
-            status = 'open, at end'
+            status = "open, at end"
         else:
-            status = 'open, at pos {0}'.format(self.pos)
+            status = "open, at pos {0}".format(self.pos)
 
-        return '[ZipSubFile {0} (size {1}, mode {2}, {3})]' \
-               .format(self.name, self.size, self.mode, status)
+        return "[ZipSubFile {0} (size {1}, mode {2}, {3})]".format(self.name, self.size, self.mode, status)
 
 
 class BadOOXML(ValueError):
-    """ exception thrown if file is not an office XML file """
+    """exception thrown if file is not an office XML file"""
 
     def __init__(self, filename, more_info=None):
-        """ create exception, remember filename and more_info """
-        super(BadOOXML, self).__init__(
-            '{0} is not an Office XML file{1}'
-            .format(filename, ': ' + more_info if more_info else ''))
+        """create exception, remember filename and more_info"""
+        super(BadOOXML, self).__init__("{0} is not an Office XML file{1}".format(filename, ": " + more_info if more_info else ""))
         self.filename = filename
         self.more_info = more_info
 
@@ -452,7 +481,7 @@ class BadOOXML(ValueError):
 
 
 class XmlParser(object):
-    """ parser for OOXML files
+    """parser for OOXML files
 
     handles two different types of files: "regular" OOXML files are zip
     archives that contain xml data and possibly other files in binary format.
@@ -468,7 +497,7 @@ class XmlParser(object):
         self._is_single_xml = None
 
     def is_single_xml(self):
-        """ determine whether this is "regular" ooxml or a single xml file
+        """determine whether this is "regular" ooxml or a single xml file
 
         Raises a BadOOXML if this is neither one or the other
         """
@@ -481,12 +510,12 @@ class XmlParser(object):
 
         # find prog id in xml prolog
         match = None
-        with uopen(self.filename, 'rb') as handle:
+        with uopen(self.filename, "rb") as handle:
             match = re.search(OFFICE_XML_PROGID_REGEX, handle.read(1024))
         if match:
             self._is_single_xml = True
             return True
-        raise BadOOXML(self.filename, 'is no zip and has no prog_id')
+        raise BadOOXML(self.filename, "is no zip and has no prog_id")
 
     def iter_files(self, args=None):
         """
@@ -498,10 +527,10 @@ class XmlParser(object):
         """
         if self.is_single_xml():
             if args:
-                raise BadOOXML(self.filename, 'xml has no subfiles')
+                raise BadOOXML(self.filename, "xml has no subfiles")
             # do not use uopen, xml parser determines encoding on its own
-            with open(self.filename, 'rb') as handle:
-                yield None, handle   # the subfile=None is needed in iter_xml
+            with open(self.filename, "rb") as handle:
+                yield None, handle  # the subfile=None is needed in iter_xml
             self.did_iter_all = True
         else:
             zipper = None
@@ -511,30 +540,31 @@ class XmlParser(object):
                 if not args:
                     subfiles = zipper.namelist()
                 elif isstr(args):
-                    subfiles = [args, ]
+                    subfiles = [
+                        args,
+                    ]
                 else:
                     # make a copy in case original args are modified
                     # Not sure whether this really is needed...
                     subfiles = tuple(arg for arg in args)
 
                 for subfile in subfiles:
-                    with zipper.open(subfile, 'r') as handle:
+                    with zipper.open(subfile, "r") as handle:
                         yield subfile, handle
                 if not args:
                     self.did_iter_all = True
             except KeyError as orig_err:
                 # Note: do not change text of this message without adjusting
                 #       conditions in except handlers
-                raise BadOOXML(self.filename,
-                               'invalid subfile: ' + str(orig_err))
+                raise BadOOXML(self.filename, "invalid subfile: " + str(orig_err))
             except BadZipfile:
-                raise BadOOXML(self.filename, 'not in zip format')
+                raise BadOOXML(self.filename, "not in zip format")
             finally:
                 if zipper:
                     zipper.close()
 
     def iter_xml(self, subfiles=None, need_children=False, tags=None):
-        """ Iterate xml contents of document
+        """Iterate xml contents of document
 
         If given subfile name[s] as optional arg[s], will only parse that
         subfile[s]
@@ -560,30 +590,31 @@ class XmlParser(object):
         if tags is None:
             want_tags = []
         elif isstr(tags):
-            want_tags = [tags, ]
-            logger.debug('looking for tags: {0}'.format(tags))
+            want_tags = [
+                tags,
+            ]
+            logger.debug("looking for tags: {0}".format(tags))
         else:
             want_tags = tags
-            logger.debug('looking for tags: {0}'.format(tags))
+            logger.debug("looking for tags: {0}".format(tags))
 
         for subfile, handle in self.iter_files(subfiles):
-            events = ('start', 'end')
+            events = ("start", "end")
             depth = 0
             inside_tags = []
             try:
                 for event, elem in ET.iterparse(handle, events):
                     if elem is None:
                         continue
-                    if event == 'start':
+                    if event == "start":
                         if elem.tag in want_tags:
-                            logger.debug('remember start of tag {0} at {1}'
-                                         .format(elem.tag, depth))
+                            logger.debug("remember start of tag {0} at {1}".format(elem.tag, depth))
                             inside_tags.append((elem.tag, depth))
                         depth += 1
                         continue
-                    assert(event == 'end')
+                    assert event == "end"
                     depth -= 1
-                    assert(depth >= 0)
+                    assert depth >= 0
 
                     is_wanted = elem.tag in want_tags
                     if is_wanted:
@@ -592,19 +623,15 @@ class XmlParser(object):
                             if inside_tags[-1] == curr_tag:
                                 inside_tags.pop()
                             else:
-                                logger.error('found end for wanted tag {0} '
-                                             'but last start tag {1} does not'
-                                             ' match'.format(curr_tag,
-                                                             inside_tags[-1]))
+                                logger.error(
+                                    "found end for wanted tag {0} " "but last start tag {1} does not" " match".format(curr_tag, inside_tags[-1])
+                                )
                                 # try to recover: close all deeper tags
-                                while inside_tags and \
-                                        inside_tags[-1][1] >= depth:
-                                    logger.debug('recover: pop {0}'
-                                                 .format(inside_tags[-1]))
+                                while inside_tags and inside_tags[-1][1] >= depth:
+                                    logger.debug("recover: pop {0}".format(inside_tags[-1]))
                                     inside_tags.pop()
-                        except IndexError:    # no inside_tag[-1]
-                            logger.error('found end of {0} at depth {1} but '
-                                         'no start event')
+                        except IndexError:  # no inside_tag[-1]
+                            logger.error("found end of {0} at depth {1} but " "no start event")
                     # yield element
                     if is_wanted or not want_tags:
                         yield subfile, elem, depth
@@ -617,19 +644,17 @@ class XmlParser(object):
                         #     del elem.getparent()[0]
             except ET.ParseError as err:
                 self.subfiles_no_xml.add(subfile)
-                if subfile is None:    # this is no zip subfile but single xml
-                    raise BadOOXML(self.filename, 'content is not valid XML')
-                elif subfile.endswith('.xml'):
+                if subfile is None:  # this is no zip subfile but single xml
+                    raise BadOOXML(self.filename, "content is not valid XML")
+                elif subfile.endswith(".xml"):
                     log = logger.warning
                 else:
                     log = logger.debug
-                log('  xml-parsing for {0} failed ({1}). '
-                    .format(subfile, err) +
-                    'Run iter_non_xml to investigate.')
-            assert(depth == 0)
+                log("  xml-parsing for {0} failed ({1}). ".format(subfile, err) + "Run iter_non_xml to investigate.")
+            assert depth == 0
 
     def get_content_types(self):
-        """ retrieve subfile infos from [Content_Types].xml subfile
+        """retrieve subfile infos from [Content_Types].xml subfile
 
         returns (files, defaults) where
         - files is a dict that maps file-name --> content-type
@@ -644,23 +669,20 @@ class XmlParser(object):
         files = []
         try:
             for _, elem, _ in self.iter_xml(FILE_CONTENT_TYPES):
-                if elem.tag.endswith('Default'):
-                    extension = elem.attrib['Extension']
-                    if extension.startswith('.'):
+                if elem.tag.endswith("Default"):
+                    extension = elem.attrib["Extension"]
+                    if extension.startswith("."):
                         extension = extension[1:]
-                    defaults.append((extension, elem.attrib['ContentType']))
-                    logger.debug('found content type for extension {0[0]}: '
-                                 '{0[1]}'.format(defaults[-1]))
-                elif elem.tag.endswith('Override'):
-                    subfile = elem.attrib['PartName']
-                    if subfile.startswith('/'):
+                    defaults.append((extension, elem.attrib["ContentType"]))
+                    logger.debug("found content type for extension {0[0]}: " "{0[1]}".format(defaults[-1]))
+                elif elem.tag.endswith("Override"):
+                    subfile = elem.attrib["PartName"]
+                    if subfile.startswith("/"):
                         subfile = subfile[1:]
-                    files.append((subfile, elem.attrib['ContentType']))
-                    logger.debug('found content type for subfile {0[0]}: '
-                                 '{0[1]}'.format(files[-1]))
+                    files.append((subfile, elem.attrib["ContentType"]))
+                    logger.debug("found content type for subfile {0[0]}: " "{0[1]}".format(files[-1]))
         except BadOOXML as oo_err:
-            if oo_err.more_info.startswith('invalid subfile') and \
-                    FILE_CONTENT_TYPES in oo_err.more_info:
+            if oo_err.more_info.startswith("invalid subfile") and FILE_CONTENT_TYPES in oo_err.more_info:
                 # no FILE_CONTENT_TYPES in zip, so probably no ms office xml.
                 # Maybe OpenDocument format? In any case, try to analyze.
                 pass
@@ -669,7 +691,7 @@ class XmlParser(object):
         return dict(files), dict(defaults)
 
     def iter_non_xml(self):
-        """ retrieve subfiles that were found by iter_xml to be non-xml
+        """retrieve subfiles that were found by iter_xml to be non-xml
 
         also looks for content type info in the [Content_Types].xml subfile.
 
@@ -681,8 +703,7 @@ class XmlParser(object):
         To handle binary parts of an xlsb file, use xls_parser.parse_xlsb_part
         """
         if not self.did_iter_all:
-            logger.warning('Did not iterate through complete file. '
-                           'Should run iter_xml() without args, first.')
+            logger.warning("Did not iterate through complete file. " "Should run iter_xml() without args, first.")
         if not self.subfiles_no_xml:
             return
 
@@ -694,15 +715,15 @@ class XmlParser(object):
 
         with ZipFile(self.filename) as zipper:
             for subfile in self.subfiles_no_xml:
-                if subfile.startswith('/'):
+                if subfile.startswith("/"):
                     subfile = subfile[1:]
                 content_type = None
                 if subfile in content_types:
                     content_type = content_types[subfile]
                 else:
                     extension = splitext(subfile)[1]
-                    if extension.startswith('.'):
-                        extension = extension[1:]   # remove the '.'
+                    if extension.startswith("."):
+                        extension = extension[1:]  # remove the '.'
                     if extension in content_defaults:
                         content_type = content_defaults[extension]
                 with ZipSubFile(zipper, subfile) as handle:
@@ -715,24 +736,23 @@ def test():
 
     Prints every element found in input file (to be given as command line arg).
     """
-    log_helper.enable_logging(False, 'debug')
+    log_helper.enable_logging(False, "debug")
     if len(sys.argv) != 2:
-        print(u'To test this code, give me a single file as arg')
+        print("To test this code, give me a single file as arg")
         return 2
 
     # test get_type
-    print('Detected type: ' + get_type(sys.argv[1]))
+    print("Detected type: " + get_type(sys.argv[1]))
 
     # test complete parsing
     parser = XmlParser(sys.argv[1])
     for subfile, elem, depth in parser.iter_xml():
         if depth < 4:
-            print(u'{0} {1}{2}'.format(subfile, '  ' * depth, debug_str(elem)))
+            print("{0} {1}{2}".format(subfile, "  " * depth, debug_str(elem)))
     for index, (subfile, content_type, _) in enumerate(parser.iter_non_xml()):
-        print(u'Non-XML subfile: {0} of type {1}'
-              .format(subfile, content_type or u'unknown'))
+        print("Non-XML subfile: {0} of type {1}".format(subfile, content_type or "unknown"))
         if index > 100:
-            print(u'...')
+            print("...")
             break
 
     log_helper.end_logging()
@@ -740,5 +760,5 @@ def test():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(test())
